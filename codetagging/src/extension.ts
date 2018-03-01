@@ -3,6 +3,24 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
+function tagSelection(tagIndex: number) {
+    let colors: string[] = ['yellow', 'red', 'green'];
+    var co = vscode.window.createTextEditorDecorationType({
+        backgroundColor: colors[tagIndex],
+        rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+        isWholeLine: true
+    });
+
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor !== undefined) {
+        let ranges: vscode.Range[] = [];
+        for (let selection of textEditor.selections) {
+            ranges.push(new vscode.Range(selection.start.line, 0, selection.end.line, 0));
+        }
+        textEditor.setDecorations(co, ranges);
+    }
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -14,14 +32,19 @@ export function activate(context: vscode.ExtensionContext) {
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
-        // The code you place here will be executed every time your command is executed
-
-        // Display a message box to the user
-        vscode.window.showInformationMessage('Hello World!');
+    let disposable = vscode.commands.registerCommand('extension.tag1', () => {
+        tagSelection(0);
+    });
+    let disposable2 = vscode.commands.registerCommand('extension.tag2', () => {
+        tagSelection(1);
+    });
+    let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
+        tagSelection(2);
     });
 
     context.subscriptions.push(disposable);
+    context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable3);
 }
 
 // this method is called when your extension is deactivated

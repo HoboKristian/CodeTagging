@@ -11,14 +11,28 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onCommand:extension.tag1",
+        "onCommand:extension.tag2",
+        "onCommand:extension.tag3"
     ],
     "main": "./out/extension",
     "contributes": {
-        "commands": [
+        "keybindings": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
+                "command": "extension.tag1",
+                "key": "",
+                "mac": "cmd+shift+z 1",
+                "when": "editorTextFocus"
+            }, {
+                "command": "extension.tag2",
+                "key": "",
+                "mac": "cmd+shift+z 2",
+                "when": "editorTextFocus"
+            }, {
+                "command": "extension.tag3",
+                "key": "",
+                "mac": "cmd+shift+z 3",
+                "when": "editorTextFocus"
             }
         ]
     },
