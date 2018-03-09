@@ -90,10 +90,26 @@ export function activate(context: vscode.ExtensionContext) {
             return new vscode.Hover('I am a hover!');
         }
     });*/
+    let listener = new Listener(context);
 
+    // subscribe to selection change and editor activation events
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+}
+
+class Listener {
+    constructor(context: vscode.ExtensionContext) {
+        vscode.workspace.onDidChangeTextDocument(this._onEvent, this, context.subscriptions);
+    }
+    _onEvent(e: vscode.TextDocumentChangeEvent) {
+        console.log("CYKA");
+        for (let msg of e.contentChanges) {
+            if (msg) {
+                console.log(msg.text, msg.range);
+            }
+        }
+    }
 }
 
 // this method is called when your extension is deactivated
