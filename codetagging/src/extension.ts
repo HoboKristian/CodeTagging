@@ -2,20 +2,29 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import Color from './Color';
+import TagInfo from './TagInfo';
+import Tag from './Tag';
+
+let tagInfos: TagInfo[] = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")]
+let tags: Tags[] = [];
 
 function tagSelection(tagIndex: number) {
-    let colors: string[] = ['yellow', 'red', 'green'];
-    var co = vscode.window.createTextEditorDecorationType({
-        backgroundColor: colors[tagIndex],
-        rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-        isWholeLine: true
-    });
+    let tag = new Tag(tagInfos[0]);
+    let co = tag.getDecoration();
+
+    tags.push(tag);
 
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
-        let ranges: vscode.Range[] = [];
+        const ranges: vscode.DecorationOptions[] = [];
         for (let selection of textEditor.selections) {
-            ranges.push(new vscode.Range(selection.start.line, 0, selection.end.line, 0));
+            const decoration = {
+                range: new vscode.Range(selection.start.line, 0, selection.end.line, 0),
+                hovesMessage: "hey there",
+                renderOptions: {after: {width: "0"}, before: {width: "0"}}
+            };
+            ranges.push(decoration);
         }
         textEditor.setDecorations(co, ranges);
     }
@@ -41,6 +50,16 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
     });
+
+    /*vscode.languages.registerHoverProvider('python', {
+        provideHover(document, position, token) {
+            console.log(document, position, token);
+            let textEditor = vscode.window.activeTextEditor;
+            if (textEditor !== undefined) {
+            }
+            return new vscode.Hover('I am a hover!');
+        }
+    });*/
 
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
