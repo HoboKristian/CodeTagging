@@ -6,27 +6,57 @@ import Color from './Color';
 import TagInfo from './TagInfo';
 import Tag from './Tag';
 
-let tagInfos: TagInfo[] = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")]
-let tags: Tags[] = [];
+let tagInfos: TagInfo[] = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")];
+let tags: Tag[] = [];
 
 function tagSelection(tagIndex: number) {
-    let tag = new Tag(tagInfos[0]);
-    let co = tag.getDecoration();
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor !== undefined) {
+        let tagsToRemove: Tag[] = [];
+        for (let selection of textEditor.selections) {
+            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start, selection.end);
+            let overlappingTag;
+            for (let oldTag of tags) {
+                if (oldTag.overlaps(tag)) {
+                    overlappingTag = oldTag;
+                }
+            }
+            if (overlappingTag !== undefined) {
+                tag = new Tag(tagInfos[tagIndex],
+                    textEditor.document.fileName,
+                    new vscode.Position(Math.min(selection.start.line, overlappingTag.start.line), 0),
+                    new vscode.Position(Math.max(selection.end.line, overlappingTag.end.line), 0)
+                );
+                tagsToRemove.push(overlappingTag);
+                console.log("OVERLAPPING");
+            }
+            tags.push(tag);
+        }
+        for (let tag of tagsToRemove) {
+            tags.splice(tags.indexOf(tag), 1);
+        }
+    }
+    redraw();
+}
 
-    tags.push(tag);
+let activeDecorations: vscode.TextEditorDecorationType[] = [];
+
+function redraw() {
+    for (let dec of activeDecorations) {
+        if (dec) {
+            dec.dispose();
+        }
+    }
+    activeDecorations = [];
 
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
-        const ranges: vscode.DecorationOptions[] = [];
-        for (let selection of textEditor.selections) {
-            const decoration = {
-                range: new vscode.Range(selection.start.line, 0, selection.end.line, 0),
-                hovesMessage: "hey there",
-                renderOptions: {after: {width: "0"}, before: {width: "0"}}
-            };
-            ranges.push(decoration);
+        console.log("DRAWING:", tags.length);
+        for (let tag of tags) {
+            let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig());
+            textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
+            activeDecorations.push(co);
         }
-        textEditor.setDecorations(co, ranges);
     }
 }
 
