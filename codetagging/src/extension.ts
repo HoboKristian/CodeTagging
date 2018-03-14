@@ -81,6 +81,22 @@ export function activate(context: vscode.ExtensionContext) {
         tagSelection(2);
     });
 
+    // Tag the selected code block
+    let dummy = vscode.commands.registerCommand('extension.tagSelection', () => {
+        vscode.window.showInputBox({prompt: 'Enter tag name.'}).then(value => {
+            let tagNameIsTaken = false; // replace with function to check if tag name is taken
+            if (!value) {
+                return; // do nothing if entered tag name is empty
+            } else if (tagNameIsTaken) {
+                // if tag name is taken, add selected code to that tag
+                vscode.window.showInformationMessage('Added to tag \"' + value + '\"');
+            } else {
+                // otherwise create new tag and add selected code
+                vscode.window.showInformationMessage('Tag \"' + value + '\" created');
+            }
+        });
+    });
+
     /*vscode.languages.registerHoverProvider('python', {
         provideHover(document, position, token) {
             console.log(document, position, token);
@@ -96,6 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+    context.subscriptions.push(dummy);
 }
 
 class Listener {
