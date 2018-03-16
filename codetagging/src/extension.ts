@@ -107,7 +107,12 @@ class Listener {
         let startLine:number = 0;
         for (let msg of e.contentChanges) {
             if (msg) {
+                console.log(msg);
+                if (msg.text === "") {
+                    horizontalMovement = msg.range.start.line - msg.range.end.line;
+                }
                 for (let i = 0; i < msg.text.length; i++) {
+                    console.log(msg.text.charCodeAt(i), msg.range.start.line);
                     if (msg.text.charAt(i) === "\n") {
                         horizontalMovement += 1;
                     }
@@ -126,7 +131,7 @@ class Listener {
                 oldEnd += horizontalMovement;
             }
             tag.start = new vscode.Position(oldStart, 0);
-            tag.end = new vscode.Position(oldEnd, 0)
+            tag.end = new vscode.Position(oldEnd, 0);
         }
         redraw();
     }
