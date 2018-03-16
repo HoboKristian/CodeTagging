@@ -14,20 +14,20 @@
         "onCommand:extension.tag1",
         "onCommand:extension.tag2",
         "onCommand:extension.tag3",
-        "onCommand:extension.tagSelection"
+        "onCommand:extension.addToExistingTag"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.tagSelection",
-                "title": "Tag selection"
+                "command": "extension.addToExistingTag",
+                "title": "Add to existing Tag"
             }
         ],
         "menus": {
             "editor/context": [
                 {
-                    "command": "extension.tagSelection",
+                    "command": "extension.addToExistingTag",
                     "when": "editorTextFocus"
                 }
             ]
@@ -62,7 +62,7 @@
             {
                 "key": "ctrl+shift+t",
                 "mac": "cmd+shift+t",
-                "command": "extension.tagSelection",
+                "command": "extension.addToExistingTag",
                 "when": "editorTextFocus"
             }
         ]

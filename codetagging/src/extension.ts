@@ -81,20 +81,38 @@ export function activate(context: vscode.ExtensionContext) {
         tagSelection(2);
     });
 
-    // Tag the selected code block
-    let dummy = vscode.commands.registerCommand('extension.tagSelection', () => {
-        vscode.window.showInputBox({prompt: 'Enter tag name.'}).then(value => {
-            let tagNameIsTaken = false; // replace with function to check if tag name is taken
-            if (!value) {
-                return; // do nothing if entered tag name is empty
-            } else if (tagNameIsTaken) {
-                // if tag name is taken, add selected code to that tag
-                vscode.window.showInformationMessage('Added to tag \"' + value + '\"');
+    // "Add to existing Tag"
+    // key: ctrl/cmd + shift + T
+    // command for adding current code selection to an existing tag
+    let addToExistingTag = vscode.commands.registerCommand('extension.addToExistingTag', () => {
+        let availableTags = ["tag1", "tag2", "tag3", "tag4", "testTag1", "testTag2", "testTag3"]; // TODO this should be changed to read the array from the current list of tag objects
+
+        // open Quick Pick input box, displays suggestions based on typed text from the availableTags array
+        vscode.window.showQuickPick(availableTags).then(input => {
+            // executes when user presses Enter or selects a suggested tag name
+            // if no tag name is entered or the tag name is not an existing tag, no tag is created
+            // if an existing tag is entered or selected, add the current code selection to the entered tag
+            if (typeof input != 'undefined' && availableTags.includes(input)) {
+                // TODO add current code selection to chosen tag
+                vscode.window.showInformationMessage('Code was tagged with \"' + input + '\"');
             } else {
-                // otherwise create new tag and add selected code
-                vscode.window.showInformationMessage('Tag \"' + value + '\" created');
+                vscode.window.showInformationMessage('Code was not tagged');
             }
         });
+
+        // vscode.window.showInputBox({prompt: 'Enter tag name.', validateInput: autoComplete}).then(value => {
+        //     let tagNameIsTaken = false; // replace with function to check if tag name is taken
+        //     if (!value) {
+        //         vscode.window.showInformationMessage('No tag created');
+        //         return; // do nothing if entered tag name is empty
+        //     } else if (tagNameIsTaken) {
+        //         // if tag name is taken, add selected code to that tag
+        //         vscode.window.showInformationMessage('Added to tag \"' + value + '\"');
+        //     } else {
+        //         // otherwise create new tag and add selected code
+        //         vscode.window.showInformationMessage('Tag \"' + value + '\" created');
+        //     }
+        // });
     });
 
     /*vscode.languages.registerHoverProvider('python', {
@@ -112,7 +130,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
-    context.subscriptions.push(dummy);
+    context.subscriptions.push(addToExistingTag);
 }
 
 class Listener {
