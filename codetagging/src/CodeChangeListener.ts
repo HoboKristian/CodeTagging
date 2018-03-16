@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import Singleton from './Singleton';
 
 export default class CodeChangeListener {
     tagsMovedCallback: Function;
@@ -31,7 +32,7 @@ export default class CodeChangeListener {
             }
         }
         let horizontalMovement:number = changeEnd - changeStart;
-        for (let tag of tags) {
+        for (let tag of Singleton.getTags()) {
             if (changeAddition && horizontalMovement !== 0) { // Addition of text
                 let newStart:number = tag.start.line;
                 let newEnd:number = tag.end.line;
@@ -48,19 +49,24 @@ export default class CodeChangeListener {
                 let newStart:number = tag.start.line;
                 let newEnd:number = tag.end.line;
                 if (changeEnd < tag.start.line) { // Deletion is above
-                    newStart += horizontalMovement;
-                    newEnd += horizontalMovement;
+                    newStart -= horizontalMovement;
+                    newEnd -= horizontalMovement;
+                    console.log(1);
                 } else if (changeStart < tag.start.line && changeEnd >= tag.start.line && changeEnd < tag.end.line) { // around start
                     newStart = changeEnd;
-                    newEnd += horizontalMovement;
+                    newEnd -= horizontalMovement;
+                    console.log(2);
                 } else if (changeStart >= tag.start.line && changeEnd < tag.end.line) { // within
-                    newEnd += horizontalMovement;
-                } else if (changeStart <= tag.start.line && changeEnd >= tag.end.line) { // around
+                    newEnd -= horizontalMovement;
+                    console.log(3);
+                } else if (changeStart < tag.start.line && changeEnd >= tag.end.line) { // around
                     // TODO: Delete the tag
                     newStart = 0;
                     newEnd = 0;
+                    console.log(4);
                 } else if (changeStart > tag.start.line && changeEnd >= tag.end.line) { // around end
                     newEnd = changeStart;
+                    console.log(5, changeStart, changeEnd);
                 }
                 tag.start = new vscode.Position(newStart, 0);
                 tag.end = new vscode.Position(newEnd, 0);

@@ -2,18 +2,17 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import Color from './Color';
-import TagInfo from './TagInfo';
-import Tag from './Tag';
 import CodeChangeListener from './CodeChangeListener';
-
-let tagInfos: TagInfo[] = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")];
-let tags: Tag[] = [];
+import Singleton from './Singleton';
+import Tag from './Tag';
+import TagInfo from './TagInfo';
 
 function tagSelection(tagIndex: number) {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         let tagsToRemove: Tag[] = [];
+        let tags: Tag[] = Singleton.getTags();
+        let tagInfos: TagInfo[] = Singleton.getTagInfos();
         for (let selection of textEditor.selections) {
             let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start, selection.end);
             let overlappingTag;
@@ -52,8 +51,7 @@ function redraw() {
 
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
-        console.log("DRAWING:", tags.length);
-        for (let tag of tags) {
+        for (let tag of Singleton.getTags()) {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig());
             textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
             activeDecorations.push(co);
