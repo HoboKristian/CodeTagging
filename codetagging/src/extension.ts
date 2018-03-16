@@ -22,18 +22,11 @@ function tagSelection(tagIndex: number) {
                 }
             }
             if (overlappingTag !== undefined) {
-                tag = new Tag(tagInfos[tagIndex],
-                    textEditor.document.fileName,
-                    new vscode.Position(Math.min(selection.start.line, overlappingTag.start.line), 0),
-                    new vscode.Position(Math.max(selection.end.line, overlappingTag.end.line), 0)
-                );
-                tagsToRemove.push(overlappingTag);
-                console.log("OVERLAPPING");
+                overlappingTag.start = new vscode.Position(Math.min(selection.start.line, overlappingTag.start.line), 0);
+                overlappingTag.start = new vscode.Position(Math.max(selection.end.line, overlappingTag.end.line), 0);
+            } else {
+                Singleton.addTag(tag);
             }
-            Singleton.addTag(tag);
-        }
-        for (let tag of tagsToRemove) {
-            Singleton.removeTag(tag);
         }
     }
     redraw();
