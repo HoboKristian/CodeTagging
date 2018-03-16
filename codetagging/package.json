@@ -11,9 +11,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.tag1",
-        "onCommand:extension.tag2",
-        "onCommand:extension.tag3"
+        "*"
     ],
     "main": "./out/extension",
     "contributes": {
