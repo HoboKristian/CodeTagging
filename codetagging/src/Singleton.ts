@@ -16,6 +16,14 @@ export default class Singleton
         return singleton.tags;
     }
 
+    public static removeTag(tag:Tag) {
+        singleton.tags.splice(singleton.tags.indexOf(tag), 1);
+    }
+
+    public static addTag(tag:Tag) {
+        singleton.tags.push(tag);
+    }
+
     public static getTagInfos() {
         return singleton.tagInfos;
     }

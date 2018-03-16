@@ -88,12 +88,15 @@ export default class CodeChangeListener {
                 console.log(3);
             } else if (changeStart < tag.start.line && changeEnd >= tag.end.line) { // around
                 // TODO: Delete the tag
-                newStart = 0;
-                newEnd = 0;
+                Singleton.removeTag(tag);
                 console.log(4);
             } else if (changeStart > tag.start.line && changeEnd >= tag.end.line) { // around end
                 newEnd = changeStart;
                 console.log(5, changeStart, changeEnd);
+            } else if (changeStart === tag.start.line && changeEnd >= tag.end.line) { // Special edge case
+                newStart = changeStart;
+                newEnd = changeStart;
+                console.log(6);
             }
             tag.start = new vscode.Position(newStart, 0);
             tag.end = new vscode.Position(newEnd, 0);

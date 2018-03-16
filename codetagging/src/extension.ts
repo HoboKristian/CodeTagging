@@ -30,10 +30,10 @@ function tagSelection(tagIndex: number) {
                 tagsToRemove.push(overlappingTag);
                 console.log("OVERLAPPING");
             }
-            tags.push(tag);
+            Singleton.addTag(tag);
         }
         for (let tag of tagsToRemove) {
-            tags.splice(tags.indexOf(tag), 1);
+            Singleton.removeTag(tag);
         }
     }
     redraw();
