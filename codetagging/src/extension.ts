@@ -103,12 +103,32 @@ class Listener {
         vscode.workspace.onDidChangeTextDocument(this._onEvent, this, context.subscriptions);
     }
     _onEvent(e: vscode.TextDocumentChangeEvent) {
-        console.log("CYKA");
+        let horizontalMovement:number = 0;
+        let startLine:number = 0;
         for (let msg of e.contentChanges) {
             if (msg) {
-                console.log(msg.text, msg.range);
+                for (let i = 0; i < msg.text.length; i++) {
+                    if (msg.text.charAt(i) === "\n") {
+                        horizontalMovement += 1;
+                    }
+                }
+                startLine = msg.range.start.line;
+                console.log("horizontal: " + horizontalMovement + " from " + startLine);
             }
         }
+        for (let tag of tags) {
+            let oldStart:number = tag.start.line;
+            let oldEnd:number = tag.end.line;
+            if (tag.start.line < startLine && tag.end.line >= startLine) {
+                oldEnd += horizontalMovement;
+            } else if (tag.start.line >= startLine) {
+                oldStart += horizontalMovement;
+                oldEnd += horizontalMovement;
+            }
+            tag.start = new vscode.Position(oldStart, 0);
+            tag.end = new vscode.Position(oldEnd, 0)
+        }
+        redraw();
     }
 }
 
