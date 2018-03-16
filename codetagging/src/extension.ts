@@ -7,10 +7,11 @@ import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
 
+let hightlightedTagInfo:TagInfo|undefined;
+
 function tagSelection(tagIndex: number) {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
-        let tagsToRemove: Tag[] = [];
         let tags: Tag[] = Singleton.getTags();
         let tagInfos: TagInfo[] = Singleton.getTagInfos();
         for (let selection of textEditor.selections) {
@@ -45,7 +46,7 @@ function redraw() {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         for (let tag of Singleton.getTags()) {
-            let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig());
+            let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
             textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
             activeDecorations.push(co);
         }
@@ -73,15 +74,24 @@ export function activate(context: vscode.ExtensionContext) {
         tagSelection(2);
     });
 
-    /*vscode.languages.registerHoverProvider('python', {
+    vscode.languages.registerHoverProvider('python', {
         provideHover(document, position, token) {
-            console.log(document, position, token);
             let textEditor = vscode.window.activeTextEditor;
             if (textEditor !== undefined) {
+                let hoveredLine = position.line;
+                hightlightedTagInfo = undefined;
+                for (let tag of Singleton.getTags()) {
+                    if (hoveredLine >= tag.start.line && hoveredLine <= tag.end.line) {
+                        hightlightedTagInfo = tag.tagInfo;
+                        console.log("highlight");
+                    }
+                }
             }
-            return new vscode.Hover('I am a hover!');
+            console.log("redraw");
+            redraw();
+            return new vscode.Hover('');
         }
-    });*/
+    });
     let codeChangeListener = new CodeChangeListener(context, redraw);
 
     // subscribe to selection change and editor activation events

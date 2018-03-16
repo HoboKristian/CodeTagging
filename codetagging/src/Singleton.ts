@@ -8,7 +8,9 @@ export default class Singleton
     private tagInfos: TagInfo[];
     private tags: Tag[];
     private constructor() {
-        this.tagInfos = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")];
+        this.tagInfos = [new TagInfo(new Color(0), "DB"),
+                            new TagInfo(new Color(1), "API"),
+                            new TagInfo(new Color(2), "BUG")];
         this.tags = [];
     }
 

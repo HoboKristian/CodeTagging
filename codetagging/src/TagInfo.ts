@@ -8,9 +8,9 @@ export default class TagInfo {
         this.color = color;
         this.name = name;
     }
-    getDecorationConfig() {
+    getDecorationConfig(highlightedTagInfo:TagInfo) {
         return {
-            backgroundColor: this.color.toString(),
+            backgroundColor: this.color.toString(this === highlightedTagInfo),
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
             isWholeLine: true
         };
