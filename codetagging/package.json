@@ -18,18 +18,26 @@
         "documentSymbolProvider" : "true"
     },
     "contributes": {
+        "commands": [
+            {
+                "command": "extension.serialize",
+                "title": "Serialize"
+            }
+        ],
         "keybindings": [
             {
                 "command": "extension.tag1",
                 "key": "",
                 "mac": "cmd+shift+z 1",
                 "when": "editorTextFocus"
-            }, {
+            },
+            {
                 "command": "extension.tag2",
                 "key": "",
                 "mac": "cmd+shift+z 2",
                 "when": "editorTextFocus"
-            }, {
+            },
+            {
                 "command": "extension.tag3",
                 "key": "",
                 "mac": "cmd+shift+z 3",
@@ -50,5 +58,10 @@
         "tslint": "^5.8.0",
         "@types/node": "^7.0.43",
         "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "@types/lodash": "^4.14.105",
+        "lodash": "^4.17.5",
+        "serializer.ts": "0.0.12"
     }
 }
