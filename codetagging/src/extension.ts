@@ -6,6 +6,9 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
+import { GenerateSerialization } from './generateSerialization';
+
+
 
 let hightlightedTagInfo:TagInfo|undefined;
 
@@ -61,6 +64,11 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "codetagging" is now active!');
 
+    //instantiate our class that serializes objects
+    //we pass it the location of the where we want to save the file
+    //this is showing as an error but it works, something about string | undefined cant be assigned to string
+    let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
+
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -72,6 +80,12 @@ export function activate(context: vscode.ExtensionContext) {
     });
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
+    });
+
+    //command to save taging to disk
+    let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
+        //call the serialize method passing it the json of serialized tag objects to write to file
+        mySerializer.serialize();
     });
 
     vscode.languages.registerHoverProvider('python', {
@@ -98,6 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+    context.subscriptions.push(saveToDisk);
 }
 
 
