@@ -14,7 +14,9 @@
         "onCommand:extension.tag1",
         "onCommand:extension.tag2",
         "onCommand:extension.tag3",
-        "onCommand:extension.tagSelectedCode"
+        "onCommand:extension.tagSelectedCode",
+        "onCommand:extension.foldRegion",
+        "onCommand:extension.unfoldRegion"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -22,6 +24,14 @@
             {
                 "command": "extension.tagSelectedCode",
                 "title": "Tag selection"
+            },
+            {
+                "command": "extension.foldRegion",
+                "title": "Fold region"
+            },
+            {
+                "command": "extension.unfoldRegion",
+                "title": "Unfold region"
             }
         ],
         "menus": {

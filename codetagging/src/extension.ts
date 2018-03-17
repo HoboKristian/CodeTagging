@@ -81,6 +81,14 @@ export function activate(context: vscode.ExtensionContext) {
         tagSelection(2);
     });
 
+    // commands for folding and unfolding
+    let foldRegion = vscode.commands.registerCommand('extension.foldRegion', () => {
+        vscode.commands.executeCommand('editor.fold');
+    });
+    let unfoldRegion = vscode.commands.registerCommand('extension.unfoldRegion', () => {
+        vscode.commands.executeCommand('editor.unfold');
+    });
+
     // "Tag selection"
     // key: ctrl/cmd + shift + T
     // command for tagging the currently selected code
@@ -139,6 +147,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+    context.subscriptions.push(foldRegion);
+    context.subscriptions.push(unfoldRegion);
     context.subscriptions.push(tagSelectedCode);
 }
 
