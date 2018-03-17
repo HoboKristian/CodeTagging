@@ -10,6 +10,7 @@ import TagInfo from './TagInfo';
 let hightlightedTagInfo:TagInfo|undefined;
 
 function tagSelection(tagIndex: number) {
+    console.log(cyka());
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         let tags: Tag[] = Singleton.getTags();
@@ -50,6 +51,23 @@ function redraw() {
             textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
             activeDecorations.push(co);
         }
+    }
+}
+
+async function cyka() {
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor) {
+        console.log("cyka", textEditor.document);
+		let noiseCheckPromise: Thenable<any> = Promise.resolve();
+        noiseCheckPromise = vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
+            if (symbols) {
+                for (let si of symbols) {
+                    if (si.kind === vscode.SymbolKind.Method) {
+                        console.log(si.name + " is a method on line " + si.location.range.start.line + " to " + si.location.range.end.line);
+                    }
+                }
+            }
+        });
     }
 }
 
