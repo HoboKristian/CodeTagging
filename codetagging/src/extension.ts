@@ -2,9 +2,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import Color from './Color';
 import TagInfo from './TagInfo';
 import Tag from './Tag';
+
 
 let tagInfos: TagInfo[] = [new TagInfo(new Color(0), "DB"), new TagInfo(new Color(1), "API"), new TagInfo(new Color(2), "BUG")];
 let tags: Tag[] = [];
@@ -80,6 +83,9 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
     });
+    let disposable4 = vscode.commands.registerCommand('extension.hideFiles', () => {
+        hideFiles();
+    });
 
     // commands for folding and unfolding
     let foldRegion = vscode.commands.registerCommand('extension.foldRegion', () => {
@@ -132,6 +138,52 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
 
+    function hideFiles() {
+        // this function takes an array of file paths and hides them in the explorer pane
+        let projDir = '';
+        let settingsFile = '';
+        let settingsBackup = '';
+        let settingsJSON = JSON.parse('{"files.exclude": {"out": false},"search.exclude": {"out": false}}');
+
+        // TODO below array is a placeholder, should be a parameter
+        let files = ["/src/Color.ts", "/src/Tag.ts", "/README.md"];
+
+        if (typeof vscode.workspace.workspaceFolders != 'undefined') {
+            projDir = vscode.workspace.workspaceFolders[0].uri.fsPath;
+            settingsFile = path.join(projDir, '.vscode', 'settings.json');
+            settingsBackup = path.join(projDir, '.vscode', 'settings-backup.json');
+        } else {
+            vscode.window.showInformationMessage('No workspace folder is open');
+        }
+
+        // copy user's settings.json file (create backup)
+        // fs.createReadStream(settingsFile).pipe(fs.createWriteStream(settingsBackup)));
+
+        // add files to the settings.json file (in files.exclude section)
+        fs.readFile(settingsFile, 'utf8', function (err, data) {
+            if (err) {
+               vscode.window.showErrorMessage(err.message);
+               return;
+           }
+           settingsJSON = JSON.parse(data);
+        });
+
+        let filesLength = files.length;
+        for (let i = 0; i < filesLength; i++) {
+            settingsJSON['files.exclude']['**' + files[i]] = true;
+        }
+        let newData = JSON.stringify(settingsJSON);
+
+        // save settings.json file
+        fs.writeFile(settingsFile, newData, err => {
+            if (err) {
+                vscode.window.showErrorMessage(err.message);
+                return;
+            }
+        });
+
+    }
+
     /*vscode.languages.registerHoverProvider('python', {
         provideHover(document, position, token) {
             console.log(document, position, token);
@@ -147,6 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+    context.subscriptions.push(disposable4);
     context.subscriptions.push(foldRegion);
     context.subscriptions.push(unfoldRegion);
     context.subscriptions.push(tagSelectedCode);

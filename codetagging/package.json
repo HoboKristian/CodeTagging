@@ -16,7 +16,8 @@
         "onCommand:extension.tag3",
         "onCommand:extension.tagSelectedCode",
         "onCommand:extension.foldRegion",
-        "onCommand:extension.unfoldRegion"
+        "onCommand:extension.unfoldRegion",
+        "onCommand:extension.hideFiles"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -32,6 +33,10 @@
             {
                 "command": "extension.unfoldRegion",
                 "title": "Unfold region"
+            },
+            {
+                "command": "extension.hideFiles",
+                "title": "Hide files"
             }
         ],
         "menus": {
@@ -73,6 +78,12 @@
                 "key": "ctrl+shift+t",
                 "mac": "cmd+shift+t",
                 "command": "extension.tagSelectedCode",
+                "when": "editorTextFocus"
+            },
+            {
+                "key": "ctrl+shift+0",
+                "mac": "cmd+shift+0",
+                "command": "extension.hideFiles",
                 "when": "editorTextFocus"
             }
         ]
