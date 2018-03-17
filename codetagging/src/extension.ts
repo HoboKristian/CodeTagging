@@ -13,7 +13,9 @@ import { GenerateSerialization } from './generateSerialization';
 let hightlightedTagInfo:TagInfo|undefined;
 
 function tagSelection(tagIndex: number) {
-    console.log(cyka());
+    if (tagIndex === 2) {
+        return cyka();
+    }
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         let tags: Tag[] = Singleton.getTags();
@@ -61,12 +63,26 @@ async function cyka() {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor) {
         console.log("cyka", textEditor.document);
-		let noiseCheckPromise: Thenable<any> = Promise.resolve();
+        let noiseCheckPromise: Thenable<any> = Promise.resolve();
         noiseCheckPromise = vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
             if (symbols) {
+                let linesToCollapse: number[] = [];
                 for (let si of symbols) {
                     if (si.kind === vscode.SymbolKind.Method) {
-                        console.log(si.name + " is a method on line " + si.location.range.start.line + " to " + si.location.range.end.line);
+                        let containsTag:boolean = false;
+                        for (let tag of Singleton.getTags()) {
+                            if (tag.tagInfo === hightlightedTagInfo) {
+                                if ((tag.start.line >= si.location.range.start.line && tag.start.line <= si.location.range.end.line) ||
+                                (tag.end.line >= si.location.range.start.line && tag.end.line <= si.location.range.end.line))
+                                {
+                                    containsTag =  true;
+                                }
+                            }
+                        }
+                        if (!containsTag) {
+                            linesToCollapse.push(si.location.range.start.line);
+                        }
+                        vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
                     }
                 }
             }
@@ -106,7 +122,7 @@ export function activate(context: vscode.ExtensionContext) {
         mySerializer.serialize();
     });
 
-    vscode.languages.registerHoverProvider('python', {
+    vscode.languages.registerHoverProvider('javascript', {
         provideHover(document, position, token) {
             let textEditor = vscode.window.activeTextEditor;
             if (textEditor !== undefined) {
@@ -119,6 +135,13 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
             }
+
+            if (hightlightedTagInfo === undefined) {
+                vscode.commands.executeCommand('editor.unfoldAll');
+            } else {
+                cyka();
+            }
+
             console.log("redraw");
             redraw();
             return new vscode.Hover('');

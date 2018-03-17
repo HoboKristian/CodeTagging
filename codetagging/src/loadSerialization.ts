@@ -6,7 +6,7 @@ import {
 } from 'vscode';
 
 import {deserialize} from "serializer.ts/Serializer";
-import { Tag } from './tag';
+import Tag from './Tag';
 
 // Generate a serialized file of our tag objects
 export class LoadSerialization{
