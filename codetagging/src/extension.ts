@@ -83,8 +83,14 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
     });
+    let toggle = true;
     let disposable4 = vscode.commands.registerCommand('extension.hideFiles', () => {
-        hideFiles();
+        if (toggle) {
+            hideFiles(["/src/Color.ts", "/src/Tag.ts", "/README.md"]);
+        } else {
+            unhideFiles();
+        }
+        toggle = !toggle;
     });
 
     // commands for folding and unfolding
@@ -117,9 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
                         // if the entered tag name already exists, no tag is created
                         // otherwise, create new tag and add the selected code to the new tag
                         if (!value) {
-                            vscode.window.showInformationMessage('No tag name was entered, code was not tagged');
+                            vscode.window.showErrorMessage('No tag name was entered, code was not tagged');
                         } else if (existingTags.includes(value)) {
-                            vscode.window.showInformationMessage('Tag already exists, code was not tagged');
+                            vscode.window.showErrorMessage('Tag already exists, code was not tagged');
                         } else {
                             // TODO actually create tag and add code selection to the new tag
                             vscode.window.showInformationMessage('Tag created, code was tagged with \"' + value + '\"');
@@ -130,58 +136,91 @@ export function activate(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage('Code was tagged with \"' + input + '\"');
                 } else {
                     // shouldn't reach this point
-                    vscode.window.showInformationMessage('Code was not tagged');
+                    vscode.window.showErrorMessage('Code was not tagged');
                 }
             } else {
-                vscode.window.showInformationMessage('No tag was selected, code was not tagged');
+                vscode.window.showErrorMessage('No tag was selected, code was not tagged');
             }
         });
     });
 
-    function hideFiles() {
-        // this function takes an array of file paths and hides them in the explorer pane
-        let projDir = '';
-        let settingsFile = '';
-        let settingsBackup = '';
-        let settingsJSON = JSON.parse('{"files.exclude": {"out": false},"search.exclude": {"out": false}}');
+    function copyFile(source: string, target: string) {
+        //fs.writeFileSync(target, fs.readFileSync(source));
+        writeFile(target, readFile(source));
+    }
 
-        // TODO below array is a placeholder, should be a parameter
-        let files = ["/src/Color.ts", "/src/Tag.ts", "/README.md"];
+    function readFile(path: string) {
+        let data = fs.readFileSync(path, 'utf8');
+        return data;
+    }
 
-        if (typeof vscode.workspace.workspaceFolders != 'undefined') {
-            projDir = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            settingsFile = path.join(projDir, '.vscode', 'settings.json');
-            settingsBackup = path.join(projDir, '.vscode', 'settings-backup.json');
-        } else {
-            vscode.window.showInformationMessage('No workspace folder is open');
-        }
-
-        // copy user's settings.json file (create backup)
-        // fs.createReadStream(settingsFile).pipe(fs.createWriteStream(settingsBackup)));
-
-        // add files to the settings.json file (in files.exclude section)
-        fs.readFile(settingsFile, 'utf8', function (err, data) {
-            if (err) {
-               vscode.window.showErrorMessage(err.message);
-               return;
-           }
-           settingsJSON = JSON.parse(data);
-        });
-
-        let filesLength = files.length;
-        for (let i = 0; i < filesLength; i++) {
-            settingsJSON['files.exclude']['**' + files[i]] = true;
-        }
-        let newData = JSON.stringify(settingsJSON);
-
-        // save settings.json file
-        fs.writeFile(settingsFile, newData, err => {
+    function writeFile(path: string, contents: string) {
+        fs.writeFile(path, contents, err => {
             if (err) {
                 vscode.window.showErrorMessage(err.message);
                 return;
             }
         });
+    }
 
+    function hideFiles(files: string[]) {
+        // ------------------------------------------------------------------------------
+        // This function takes an array of file paths and hides them in the explorer pane.
+        // File paths should be relative to the working project directory.
+        // ------------------------------------------------------------------------------
+
+        let projDir = ''; // declare variable for project folder path
+        let settingsFile = ''; // declare variable for settings.json file path
+        let settingsBackupFile = ''; // declare variable for settings-backup.json file path
+
+        // get current working directory and the path to the settings.json and settings-backup.json files
+        if (typeof vscode.workspace.workspaceFolders != 'undefined') {
+            projDir = vscode.workspace.workspaceFolders[0].uri.fsPath; // get active project folder path
+            settingsFile = path.join(projDir, '.vscode', 'settings.json'); // set settings.json file path
+            settingsBackupFile = path.join(projDir, '.vscode', 'settings-backup.json'); // set settings-backup.json file path
+        } else {
+            vscode.window.showErrorMessage('No workspace folder is open!');
+            return;
+        }
+
+        copyFile(settingsFile, settingsBackupFile); // copy user's settings.json file (create backup)
+        let settingsString = readFile(settingsFile); // read contents of settings.json file
+        let settingsJSON = JSON.parse(settingsString); // convert string to JSON object
+
+        // add files files.exclude section of to the settings JSON object
+        let filesLength = files.length;
+        for (let i = 0; i < filesLength; i++) {
+            settingsJSON['files.exclude']['**' + files[i]] = true;
+        }
+
+        let newSettingsJSON = JSON.stringify(settingsJSON, null, 2); // convert JSON object to string
+        writeFile(settingsFile, newSettingsJSON); // save to settings.json file
+
+        return;
+    }
+
+    function unhideFiles() {
+        // ------------------------------------------------------------------------------
+        // this function unhides any files that were hidden by the hideFiles() function
+        // loads back the settings-backup.json file
+        // ------------------------------------------------------------------------------
+
+        let projDir = ''; // working project directory
+        let settingsFile = ''; // path to settings.json file
+        let settingsBackupFile = ''; // path to settings-backup.json file
+
+        // get current working directory and the path to the settings.json and settings-backup.json files
+        if (typeof vscode.workspace.workspaceFolders != 'undefined') {
+            projDir = vscode.workspace.workspaceFolders[0].uri.fsPath; // get active project folder path
+            settingsFile = path.join(projDir, '.vscode', 'settings.json'); // set settings.json file path
+            settingsBackupFile = path.join(projDir, '.vscode', 'settings-backup.json'); // set settings-backup.json file path
+        } else {
+            vscode.window.showInformationMessage('No workspace folder is open');
+        }
+
+        copyFile(settingsBackupFile, settingsFile); // move contents of settings-backup.json to settings.json
+
+        return;
     }
 
     /*vscode.languages.registerHoverProvider('python', {
