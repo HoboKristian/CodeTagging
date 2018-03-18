@@ -82,6 +82,16 @@ export function activate(context: vscode.ExtensionContext) {
             mySerializer.serialize();
         });
         context.subscriptions.push(saveToDisk);
+
+        let myLoader = new LoadSerialization(vscode.workspace.rootPath);
+
+        let loadFromFile = vscode.commands.registerCommand('extension.load', () => {
+            //call the serialize method passing it the json of serialized tag objects to write to file
+            myLoader.readFile();
+            redraw();
+        });
+        context.subscriptions.push(loadFromFile);
+
     }
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand

@@ -43,52 +43,32 @@ export class GenerateSerialization{
         //serialize tagInfos
         fs.stat(this.serializedTagInfos, (err, stats) => {
 
-            if (err) {
-                if (err.code === 'ENOENT') {
-                    //serialize the current array of TagInfo objects into a json string
-                    let jsonStr = JSON.stringify(serialize(Singleton.getTagInfos()));
 
-                    //debug: write the json string representing out taginfo objects to console
-                    //console.log(jsonStr);
+            //serialize the current array of TagInfo objects into a json string
+            let jsonStr = JSON.stringify(serialize(Singleton.getTagInfos()));
 
-                    //write json to disk
-                    this.writeFile(this.serializedTagInfos, jsonStr);
-                } else {
-                    window.showErrorMessage(err.message);
-                }
-                return;
-            }
+            //debug: write the json string representing out taginfo objects to console
+            //console.log(jsonStr);
 
-            if (stats.isFile()) {
-                window.showErrorMessage(
-                    'An .serializedfile file already exists in this workspace.'
-                );
-            }
+            //write json to disk
+            this.writeFile(this.serializedTagInfos, jsonStr);
+
+
         });
         //serialize tags
         fs.stat(this.serializedTags, (err, stats) => {
 
-            if (err) {
-                if (err.code === 'ENOENT') {
-                    //serialize the current array of Tag objects into a json string
-                    let jsonStr = JSON.stringify(serialize(Singleton.getTags()));
+            
+            //serialize the current array of Tag objects into a json string
+            let jsonStr = JSON.stringify(serialize(Singleton.getTags()));
 
-                     //debug: write the json string representing out taginfo objects to console
-                     //console.log(jsonStr);
+                //debug: write the json string representing out taginfo objects to console
+                //console.log(jsonStr);
 
-                    //write the json to disk
-                    this.writeFile(this.serializedTags, jsonStr);
-                } else {
-                    window.showErrorMessage(err.message);
-                }
-                return;
-            }
+            //write the json to disk
+            this.writeFile(this.serializedTags, jsonStr);
+            
 
-            if (stats.isFile()) {
-                window.showErrorMessage(
-                    'An .serializedfile file already exists in this workspace.'
-                );
-            }
         });
     }
     

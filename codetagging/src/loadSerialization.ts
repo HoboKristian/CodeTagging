@@ -31,7 +31,7 @@ export class LoadSerialization{
 	readFile() {
         //load serializedTaginfo file to objects
         let TagInfoContents = fs.readFileSync(this.filePathForTagInfos,'utf8');
-        //console.log(TagInfoContents);
+       // console.log(TagInfoContents);
         let tagInfoObj = JSON.parse(TagInfoContents);
         //console.log('printing the taginfo json object parsed from the string');
         //console.log(tagInfoObj);
