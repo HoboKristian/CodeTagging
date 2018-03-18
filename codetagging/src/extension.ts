@@ -28,8 +28,8 @@ function tagSelection(tagIndex: number) {
                 }
             }
             if (overlappingTag !== undefined) {
-                overlappingTag.start = Math.min(selection.start.line, overlappingTag.start);
-                overlappingTag.end = Math.max(selection.end.line, overlappingTag.end);
+                overlappingTag.start = Math.min(tag.start, overlappingTag.start);
+                overlappingTag.end = Math.max(tag.end, overlappingTag.end);
             } else {
                 Singleton.addTag(tag);
             }
@@ -52,7 +52,6 @@ function redraw() {
     if (textEditor !== undefined) {
         for (let tag of Singleton.getTags()) {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
-            console.log("REDRAW", tag.start, tag.end);
             textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
             activeDecorations.push(co);
         }

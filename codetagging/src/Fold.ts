@@ -28,8 +28,8 @@ namespace Fold {
         let methodEnd = method.location.range.end.line;
         for (let tag of Singleton.getTags()) {
             if (tag.tagInfo === hightlightedTagInfo) {
-                let tagStart = tag.start.line;
-                let tagEnd = tag.end.line;
+                let tagStart = tag.start;
+                let tagEnd = tag.end;
                 if ((tagStart >= methodStart && tagStart <= methodEnd) ||
                 (tagEnd >= methodStart && tagEnd <= methodEnd)) {
                     return true;
