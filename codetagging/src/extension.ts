@@ -6,10 +6,9 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
+import Fold from './Fold';
 import { GenerateSerialization } from './generateSerialization';
 import { LoadSerialization } from "./loadSerialization";
-
-
 
 let hightlightedTagInfo:TagInfo|undefined;
 
@@ -19,7 +18,10 @@ function tagSelection(tagIndex: number) {
         let tags: Tag[] = Singleton.getTags();
         let tagInfos: TagInfo[] = Singleton.getTagInfos();
         for (let selection of textEditor.selections) {
-            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start, selection.end);
+            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line);
+            if (selection.start.line === selection.end.line || selection.end.character > 0) {
+                tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line + 1);
+            }
             let overlappingTag;
             for (let oldTag of tags) {
                 if (oldTag.overlaps(tag)) {
@@ -27,8 +29,8 @@ function tagSelection(tagIndex: number) {
                 }
             }
             if (overlappingTag !== undefined) {
-                overlappingTag.start = new vscode.Position(Math.min(selection.start.line, overlappingTag.start.line), 0);
-                overlappingTag.start = new vscode.Position(Math.max(selection.end.line, overlappingTag.end.line), 0);
+                overlappingTag.start = Math.min(tag.start, overlappingTag.start);
+                overlappingTag.end = Math.max(tag.end, overlappingTag.end);
             } else {
                 Singleton.addTag(tag);
             }
@@ -51,7 +53,7 @@ function redraw() {
     if (textEditor !== undefined) {
         for (let tag of Singleton.getTags()) {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
-            textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
+            textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
             activeDecorations.push(co);
         }
     }
@@ -72,11 +74,15 @@ export function activate(context: vscode.ExtensionContext) {
     //instantiate our class that serializes objects
     //we pass it the location of the where we want to save the file
     //this is showing as an error but it works, something about string | undefined cant be assigned to string
-    let mySerializer = new GenerateSerialization(vscode.Uri.parse(uriString));
-
-    //instantiate file loader class that will load the serialized file
-    let myLoader = new LoadSerialization(uriString);
-
+    if (vscode.workspace.rootPath) {
+        let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
+        //command to save taging to disk
+        let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
+            //call the serialize method passing it the json of serialized tag objects to write to file
+            mySerializer.serialize();
+        });
+        context.subscriptions.push(saveToDisk);
+    }
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -89,30 +95,27 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
     });
-    //command to save array of Tag objects to disk
-    let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
-        //call the serialize method passing it the json of serialized tag objects to write to file
-        mySerializer.serialize();
-    });
-    //command to load the serialized file (ie. the json) that contains the represntation of our tag objects
-    let readFromDisk = vscode.commands.registerCommand('extension.load', () => {
-        //call the load method
-        myLoader.readFile();
-    });
 
-    vscode.languages.registerHoverProvider('python', {
+    vscode.languages.registerHoverProvider('javascript', {
         provideHover(document, position, token) {
             let textEditor = vscode.window.activeTextEditor;
             if (textEditor !== undefined) {
                 let hoveredLine = position.line;
                 hightlightedTagInfo = undefined;
                 for (let tag of Singleton.getTags()) {
-                    if (hoveredLine >= tag.start.line && hoveredLine <= tag.end.line) {
+                    if (hoveredLine >= tag.start && hoveredLine <= tag.end) {
                         hightlightedTagInfo = tag.tagInfo;
                         console.log("highlight");
                     }
                 }
             }
+
+            if (hightlightedTagInfo === undefined) {
+                Fold.unfoldFoldedMethods();
+            } else {
+                Fold.highlightTag(hightlightedTagInfo);
+            }
+
             console.log("redraw");
             redraw();
             return new vscode.Hover('');
@@ -124,8 +127,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
-    context.subscriptions.push(saveToDisk);
-    context.subscriptions.push(readFromDisk);
 }
 
 

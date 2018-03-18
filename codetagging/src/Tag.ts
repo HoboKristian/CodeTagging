@@ -1,6 +1,5 @@
 import TagInfo from "./TagInfo";
 import * as vscode from 'vscode';
-import Position from 'vscode';
 import {Type} from "serializer.ts/Decorators";
 
 export default class Tag {
@@ -10,11 +9,9 @@ export default class Tag {
     //author: string;
     file: string;
     timestamp: number;
-    @Type(() => Position)
-    start: vscode.Position;
-    @Type(() => Position)
-    end: vscode.Position;
-    constructor(tagInfo: TagInfo, file: string, start: vscode.Position, end: vscode.Position) {
+    start: number;
+    end: number;
+    constructor(tagInfo: TagInfo, file: string, start: number, end: number) {
         this.tagInfo = tagInfo;
         this.timestamp = Date.now();
         this.file = file;
@@ -23,7 +20,7 @@ export default class Tag {
     }
     overlaps(tag: Tag) {
         return ((tag.file === this.file) && (tag.tagInfo === this.tagInfo) &&
-            (tag.start.line <= this.end.line && tag.start.line >= this.start.line
-            || tag.end.line <= this.end.line && tag.end.line >= this.start.line));
+            (tag.start <= this.end && tag.start >= this.start
+            || tag.end <= this.end && tag.end >= this.start));
     }
 }

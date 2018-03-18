@@ -14,6 +14,9 @@
         "*"
     ],
     "main": "./out/extension",
+    "capabilities": {
+        "documentSymbolProvider": "true"
+    },
     "contributes": {
         "commands": [
             {

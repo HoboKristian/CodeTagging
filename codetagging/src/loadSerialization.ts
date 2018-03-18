@@ -12,8 +12,8 @@ export class LoadSerialization{
     //class properties
     filePathForTagInfos: string;
     filePathForTags: string;
-    private tagInfos: TagInfo[];
-    private tags: Tag[];
+    private tagInfos: TagInfo[] = [];
+    private tags: Tag[] = [];
 
     //Constructor
     //takes the a string of the filepath for the serialized file
