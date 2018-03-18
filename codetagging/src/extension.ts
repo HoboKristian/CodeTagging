@@ -18,23 +18,33 @@ function getProjectPath() {
 
 function copyFile(source: string, target: string) {
     // this function overwrites the contents of the target file with the contents of the source file
-    writeFile(target, readFile(source));
+    fs.writeFileSync(target, fs.readFileSync(source, 'utf8'));
 }
 
-function readFile(path: string) {
-    // this function returns the contents of the specified file as a string
-    let data = fs.readFileSync(path, 'utf8');
-    return data;
-}
+function checkSettingsFile() {
+    // This function checks that the .vscode/settings.json file exists, and if not creates it
 
-function writeFile(path: string, data: string) {
-    // this function overwrites the contents of the specified file with the 'data' string
-    fs.writeFile(path, data, err => {
-        if (err) {
-            vscode.window.showErrorMessage(err.message);
-            return;
-        }
-    });
+    // get current working directory and the path to the settings.json file
+    let projDir = getProjectPath();
+    let vscodeFolder = '';
+    let settingsFile = '';
+    if (projDir) {
+        vscodeFolder = path.join(projDir, '.vscode'); // set .vscode folder path
+        settingsFile = path.join(projDir, '.vscode', 'settings.json'); // set settings.json file path
+    } else {
+        return; // no workspace folder is open, nothing to initialize
+    }
+
+    if (!fs.existsSync(vscodeFolder)){
+        fs.mkdirSync(vscodeFolder); // make .vscode directory if it doesn't already exist
+    }
+    
+    if (!fs.existsSync(settingsFile)) {
+        let data = '{\n    "files.exclude": {\n        "out": true\n    },\n    "search.exclude": {\n        "out": true\n    }\n}\n';
+        fs.writeFileSync(settingsFile, data); // create settings.json file if it doesn't already exist
+    }
+
+    return;
 }
 
 function hideFiles(files: string[]) {
@@ -43,6 +53,8 @@ function hideFiles(files: string[]) {
     // File paths should be relative to the working project directory.
     // ------------------------------------------------------------------------------
 
+    checkSettingsFile(); // make sure settings.json file exists
+    
     // get current working directory and the path to the settings.json and settings-backup.json files
     let projDir = getProjectPath();
     let settingsFile = '';
@@ -55,7 +67,7 @@ function hideFiles(files: string[]) {
     }
     
     copyFile(settingsFile, settingsBackupFile); // copy user's settings.json file (create backup)
-    let settingsString = readFile(settingsFile); // read contents of settings.json file
+    let settingsString = fs.readFileSync(settingsFile, 'utf8'); // read contents of settings.json file
     let settingsJSON = JSON.parse(settingsString); // convert string to JSON object
 
     // add files files.exclude section of to the settings JSON object
@@ -65,7 +77,7 @@ function hideFiles(files: string[]) {
     }
 
     let newSettingsJSON = JSON.stringify(settingsJSON, null, 2); // convert JSON object to string
-    writeFile(settingsFile, newSettingsJSON); // save to settings.json file
+    fs.writeFileSync(settingsFile, newSettingsJSON); // save to settings.json file
 
     return;
 }
@@ -75,7 +87,7 @@ function unhideFiles() {
     // This function unhides any files that were hidden by the hideFiles() function
     // Loads back the settings-backup.json file
     // ------------------------------------------------------------------------------
-
+    
     // get current working directory and the path to the settings.json and settings-backup.json files
     let projDir = getProjectPath();
     let settingsFile = '';
@@ -87,7 +99,12 @@ function unhideFiles() {
         return; // no workspace folder is open, nothing to hide 
     }
 
-    copyFile(settingsBackupFile, settingsFile); // move contents of settings-backup.json to settings.json
+    if (fs.existsSync(settingsBackupFile)) {
+        copyFile(settingsBackupFile, settingsFile); // move contents of settings-backup.json to settings.json
+    } else {
+        let data = '{\n    "files.exclude": {\n        "out": true\n    },\n    "search.exclude": {\n        "out": true\n    }\n}\n';
+        fs.writeFileSync(settingsFile, data); // write directly to settings.json if backup doesn't exist
+    }
 
     return;
 }
@@ -100,10 +117,10 @@ export function activate(context: vscode.ExtensionContext) {
         // key: ctrl/cmd + shift + 0
         // placeholder command for testing the hide files functionality
         if (toggle) {
+            //checkSettingsFile();
             hideFiles(["/src/Color.ts", "/src/Tag.ts", "/README.md"]);
         } else {
             unhideFiles();
-            vscode.window.showInformationMessage('Test2');
         }
         toggle = !toggle;
     });
