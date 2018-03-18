@@ -11,13 +11,8 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.tag1",
-        "onCommand:extension.tag2",
-        "onCommand:extension.tag3",
         "onCommand:extension.tagSelectedCode",
-        "onCommand:extension.foldRegion",
-        "onCommand:extension.unfoldRegion",
-        "onCommand:extension.hideFiles"
+        "onCommand:extension.toggleHide"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -27,15 +22,7 @@
                 "title": "Tag selection"
             },
             {
-                "command": "extension.foldRegion",
-                "title": "Fold region"
-            },
-            {
-                "command": "extension.unfoldRegion",
-                "title": "Unfold region"
-            },
-            {
-                "command": "extension.hideFiles",
+                "command": "extension.toggleHide",
                 "title": "Hide files"
             }
         ],
@@ -47,33 +34,7 @@
                 }
             ]
         },
-        "views": {
-            "explorer": [
-                {
-                    "id": "tagList",
-                    "name": "Tag List"
-                }
-            ]
-        },
         "keybindings": [
-            {
-                "key": "ctrl+shift+z 1",
-                "mac": "cmd+shift+z 1",
-                "command": "extension.tag1",
-                "when": "editorTextFocus"
-            },
-            {
-                "key": "ctrl+shift+z 2",
-                "mac": "cmd+shift+z 2",
-                "command": "extension.tag2",
-                "when": "editorTextFocus"
-            },
-            {
-                "key": "ctrl+shift+z 3",
-                "mac": "cmd+shift+z 3",
-                "command": "extension.tag3",
-                "when": "editorTextFocus"
-            },
             {
                 "key": "ctrl+shift+t",
                 "mac": "cmd+shift+t",
@@ -83,7 +44,7 @@
             {
                 "key": "ctrl+shift+0",
                 "mac": "cmd+shift+0",
-                "command": "extension.hideFiles",
+                "command": "extension.toggleHide",
                 "when": "editorTextFocus"
             }
         ]
