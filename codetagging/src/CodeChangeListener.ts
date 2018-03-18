@@ -9,97 +9,108 @@ enum ChangeType {
 
 export default class CodeChangeListener {
     tagsMovedCallback: Function;
+    oldLineCount: number = 0;
     constructor(context: vscode.ExtensionContext, callback: Function) {
         vscode.workspace.onDidChangeTextDocument(this._onEvent, this, context.subscriptions);
         this.tagsMovedCallback = callback;
+        let textEditor = vscode.window.activeTextEditor;
+        if (textEditor) {
+            this.oldLineCount = textEditor.document.lineCount;
+        }
     }
     _onEvent(e: vscode.TextDocumentChangeEvent) {
-        let changeStart:number = 0;
-        let changeEnd:number = 0;
-        let changeType:ChangeType = ChangeType.None;
-        for (let msg of e.contentChanges) {
-            if (msg) {
-                let result = this.getChangeType(msg);
-                changeStart = result.changeStart;
-                changeEnd = result.changeEnd;
-                changeType = result.changeType;
-            }
+        let msg = e.contentChanges[0];
+
+        let result = this.getChangeType(msg);
+        let changeStart:number = result.changeStart;
+        let changeEnd:number = result.changeEnd;
+        let diff:number = result.diff;
+        let changeType:ChangeType = result.changeType;
+
+        if (msg.text.length !== 0) {
+            changeStart += 1;
+            changeEnd += 1;
         }
+
         if (changeType === ChangeType.Addition) {
-            this.handleAdditionChange(changeStart, changeEnd);
+            this.handleAdditionChange(diff, changeStart, changeEnd);
         } else if (changeType === ChangeType.Deletion) {
-            this.handleDeletionChange(changeStart, changeEnd);
+            this.handleDeletionChange(diff, changeStart, changeEnd);
         }
         this.tagsMovedCallback();
     }
     getChangeType(msg:vscode.TextDocumentContentChangeEvent) {
-        let changeStart:number = 0;
-        let changeEnd:number = 0;
+        let diff = 0;
+        let textEditor = vscode.window.activeTextEditor;
+        if (textEditor) {
+            diff = textEditor.document.lineCount - this.oldLineCount;
+            this.oldLineCount = textEditor.document.lineCount;
+        }
+
+        let changeStart:number = msg.range.start.line;
+        let changeEnd:number = msg.range.end.line;
         let changeType:ChangeType = ChangeType.None;
-        if (msg.text === "") {
+        if (diff < 0) {
             changeType = ChangeType.Deletion;
-            changeStart = msg.range.start.line;
-            changeEnd = msg.range.end.line;
+        } else if (diff > 0) {
+            changeType = ChangeType.Addition;
         }
-        if (changeType !== ChangeType.Deletion) {
-            changeStart = msg.range.start.line;
-            changeEnd = msg.range.end.line;
-            for (let i = 0; i < msg.text.length; i++) {
-                console.log(msg.text.charCodeAt(i), msg.range.start.line);
-                if (msg.text.charAt(i) === "\n") {
-                    changeType = ChangeType.Addition;
-                    changeEnd += 1;
-                }
-            }
-        }
-        return {changeStart, changeEnd, changeType};
+
+        return {diff, changeStart, changeEnd, changeType};
     }
 
-    handleAdditionChange(changeStart:number, changeEnd:number) {
-        let horizontalMovement:number = changeEnd - changeStart;
+    handleAdditionChange(diff:number, changeStart:number, changeEnd:number) {
         for (let tag of Singleton.getTags()) {
-            let newStart:number = tag.start.line;
-            let newEnd:number = tag.end.line;
-            if (tag.start.line < changeStart && tag.end.line >= changeStart) { // Addition is in between
-                newEnd += horizontalMovement;
-            } else if (tag.start.line >= changeStart) { // Addition is before
-                newStart += horizontalMovement;
-                newEnd += horizontalMovement;
+            let tagStart:number = tag.start;
+            let tagEnd:number = tag.end;
+            console.log(tagStart, tagEnd);
+            if (changeStart < tagStart) { // before
+                console.log("add before");
+                tagStart += diff;
+                tagEnd += diff;
+            } else if (changeStart >= tagStart && changeStart <= tagEnd) { // within
+                console.log("add within");
+                tagEnd += diff;
             }
-            tag.start = new vscode.Position(newStart, 0);
-            tag.end = new vscode.Position(newEnd, 0);
+            tag.start = tagStart;
+            tag.end = tagEnd;
         }
     }
-    handleDeletionChange(changeStart:number, changeEnd:number) {
-        let horizontalMovement:number = changeEnd - changeStart;
+    handleDeletionChange(diff:number, changeStart:number, changeEnd:number) {
+        changeStart += 1;
+        if (diff === -1) { // Single line case
+            changeStart += 1;
+            changeEnd += 1;
+        }
+
         for (let tag of Singleton.getTags()) {
-            let newStart:number = tag.start.line;
-            let newEnd:number = tag.end.line;
-            if (changeEnd < tag.start.line) { // Deletion is above
-                newStart -= horizontalMovement;
-                newEnd -= horizontalMovement;
-                console.log(1);
-            } else if (changeStart < tag.start.line && changeEnd >= tag.start.line && changeEnd < tag.end.line) { // around start
-                newStart = changeEnd;
-                newEnd -= horizontalMovement;
-                console.log(2);
-            } else if (changeStart >= tag.start.line && changeEnd < tag.end.line) { // within
-                newEnd -= horizontalMovement;
-                console.log(3);
-            } else if (changeStart < tag.start.line && changeEnd >= tag.end.line) { // around
+            let tagStart:number = tag.start;
+            let tagEnd:number = tag.end;
+            if (changeEnd < tagStart) { // before
+                tagStart += diff;
+                tagEnd += diff;
+                console.log("del before");
+            } else if (changeStart > tagStart && changeEnd < tagEnd) { // within
+                tagEnd += diff;
+                console.log("del within");
+            } else if (changeStart <= tagStart && changeEnd >= tagEnd) { // around
                 // TODO: Delete the tag
                 Singleton.removeTag(tag);
-                console.log(4);
-            } else if (changeStart > tag.start.line && changeEnd >= tag.end.line) { // around end
-                newEnd = changeStart;
-                console.log(5, changeStart, changeEnd);
-            } else if (changeStart === tag.start.line && changeEnd >= tag.end.line) { // Special edge case
-                newStart = changeStart;
-                newEnd = changeStart;
-                console.log(6);
+                console.log("del around");
+            } else if (changeStart <= tagStart && changeEnd >= tagStart && changeEnd < tagEnd) { // around start
+                tagStart = changeEnd;
+                tagEnd += diff;
+                console.log("del start");
+            } else if (changeStart > tagStart && changeEnd >= tagEnd) { // around end
+                tagEnd = changeStart - 1;
+                console.log("del end", changeStart, changeEnd);
+            } else if (changeStart === tagStart && changeEnd >= tagEnd) { // Special edge case
+                tagStart = changeStart;
+                tagEnd = changeStart;
+                console.log("del special");
             }
-            tag.start = new vscode.Position(newStart, 0);
-            tag.end = new vscode.Position(newEnd, 0);
+            tag.start = tagStart;
+            tag.end = tagEnd;
         }
     }
 }

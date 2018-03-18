@@ -17,7 +17,10 @@ function tagSelection(tagIndex: number) {
         let tags: Tag[] = Singleton.getTags();
         let tagInfos: TagInfo[] = Singleton.getTagInfos();
         for (let selection of textEditor.selections) {
-            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start, selection.end);
+            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line);
+            if (selection.start.line === selection.end.line || selection.end.character > 0) {
+                tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line + 1);
+            }
             let overlappingTag;
             for (let oldTag of tags) {
                 if (oldTag.overlaps(tag)) {
@@ -25,8 +28,8 @@ function tagSelection(tagIndex: number) {
                 }
             }
             if (overlappingTag !== undefined) {
-                overlappingTag.start = new vscode.Position(Math.min(selection.start.line, overlappingTag.start.line), 0);
-                overlappingTag.start = new vscode.Position(Math.max(selection.end.line, overlappingTag.end.line), 0);
+                overlappingTag.start = Math.min(selection.start.line, overlappingTag.start);
+                overlappingTag.end = Math.max(selection.end.line, overlappingTag.end);
             } else {
                 Singleton.addTag(tag);
             }
@@ -49,7 +52,8 @@ function redraw() {
     if (textEditor !== undefined) {
         for (let tag of Singleton.getTags()) {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
-            textEditor.setDecorations(co, [new vscode.Range(tag.start, tag.end)]);
+            console.log("REDRAW", tag.start, tag.end);
+            textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
             activeDecorations.push(co);
         }
     }
@@ -95,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
                 let hoveredLine = position.line;
                 hightlightedTagInfo = undefined;
                 for (let tag of Singleton.getTags()) {
-                    if (hoveredLine >= tag.start.line && hoveredLine <= tag.end.line) {
+                    if (hoveredLine >= tag.start && hoveredLine <= tag.end) {
                         hightlightedTagInfo = tag.tagInfo;
                         console.log("highlight");
                     }
