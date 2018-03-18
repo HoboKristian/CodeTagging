@@ -11,11 +11,9 @@ import { GenerateSerialization } from './generateSerialization';
 
 
 let hightlightedTagInfo:TagInfo|undefined;
+let foldedMethods:string[] = [];
 
 function tagSelection(tagIndex: number) {
-    if (tagIndex === 2) {
-        return cyka();
-    }
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         let tags: Tag[] = Singleton.getTags();
@@ -92,10 +90,28 @@ function methodContainsHighlightedTag(method:vscode.SymbolInformation):boolean {
     return false;
 }
 
-async function cyka() {
+async function unfoldFoldedMethods() {
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor) {
+        vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
+            if (symbols) {
+                let lineNumbers:number[] = [];
+                for (let si of symbols) {
+                    if (si.kind === vscode.SymbolKind.Method && foldedMethods.includes(si.name)) {
+                        lineNumbers.push(si.location.range.start.line);
+                    }
+                }
+                vscode.commands.executeCommand('editor.unfold', {levels: 1, direction: 'up', selectionLines: lineNumbers});
+                foldedMethods = [];
+            }
+        });
+    }
+}
+async function highlightTag() {
     let linesToCollapse: number[] = [];
     for (let method of await getMethodsInCurrentFiles()) {
         if (!methodContainsHighlightedTag(method)) {
+            foldedMethods.push(method.name);
             linesToCollapse.push(method.location.range.start.line);
         }
     }
@@ -150,9 +166,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (hightlightedTagInfo === undefined) {
-                vscode.commands.executeCommand('editor.unfoldAll');
+                unfoldFoldedMethods();
             } else {
-                cyka();
+                highlightTag();
             }
 
             console.log("redraw");
