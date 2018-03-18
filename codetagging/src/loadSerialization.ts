@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import {
-	workspace,
 	window,
-	Uri
 } from 'vscode';
 
 import {deserialize} from "serializer.ts/Serializer";
