@@ -18,7 +18,8 @@ import {serialize} from "serializer.ts/Serializer";
 export class GenerateSerialization{
 
     //class properties
-    serializedFile: any;
+    serializedTags: any;
+    serializedTagInfos: any;
     lookupPath: any;
 
     //Constructor
@@ -29,24 +30,29 @@ export class GenerateSerialization{
 		lodash.get(workspace, 'workspaceFolders[0].uri.fsPath', '.'),
         );
 
-        //create our file object
-        this.serializedFile = path.join(this.lookupPath, '.serializedfile');
+        //create our file to write tags to
+        this.serializedTags = path.join(this.lookupPath, '.serializedTags');
+        //create our file to write tagInfos to
+        this.serializedTagInfos = path.join(this.lookupPath, '.serializedTagInfos');
 
     }
 
 	
     //attempt to write to the file object
     serialize() {
-        fs.stat(this.serializedFile, (err, stats) => {
+        //serialize tagInfos
+        fs.stat(this.serializedTagInfos, (err, stats) => {
 
             if (err) {
                 if (err.code === 'ENOENT') {
-                    //serialize the current array of Tag objects into a json string
-                    let jsonStr = JSON.stringify(serialize(Singleton.getTags()));
+                    //serialize the current array of TagInfo objects into a json string
+                    let jsonStr = JSON.stringify(serialize(Singleton.getTagInfos()));
 
-                    console.log(jsonStr);
-                    //write the json string to file
-                    this.writeFile(jsonStr);
+                    //debug: write the json string representing out taginfo objects to console
+                    //console.log(jsonStr);
+
+                    //write json to disk
+                    this.writeFile(this.serializedTagInfos, jsonStr);
                 } else {
                     window.showErrorMessage(err.message);
                 }
@@ -59,11 +65,36 @@ export class GenerateSerialization{
                 );
             }
         });
-    };
-    
-	writeFile(jsonStr: string) {
+        //serialize tags
+        fs.stat(this.serializedTags, (err, stats) => {
 
-		fs.writeFile(this.serializedFile, jsonStr, err => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    //serialize the current array of Tag objects into a json string
+                    let jsonStr = JSON.stringify(serialize(Singleton.getTags()));
+
+                     //debug: write the json string representing out taginfo objects to console
+                     //console.log(jsonStr);
+
+                    //write the json to disk
+                    this.writeFile(this.serializedTags, jsonStr);
+                } else {
+                    window.showErrorMessage(err.message);
+                }
+                return;
+            }
+
+            if (stats.isFile()) {
+                window.showErrorMessage(
+                    'An .serializedfile file already exists in this workspace.'
+                );
+            }
+        });
+    }
+    
+	writeFile(file: any, jsonStr: string) {
+
+		fs.writeFile(file, jsonStr, err => {
 			if (err) {
 				window.showErrorMessage(err.message);
 				return;

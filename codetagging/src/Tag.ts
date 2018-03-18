@@ -1,13 +1,18 @@
 import TagInfo from "./TagInfo";
 import * as vscode from 'vscode';
+import Position from 'vscode';
+import {Type} from "serializer.ts/Decorators";
 
 export default class Tag {
+    @Type(() => TagInfo)
     tagInfo: TagInfo;
     //id: string;
     //author: string;
     file: string;
     timestamp: number;
+    @Type(() => Position)
     start: vscode.Position;
+    @Type(() => Position)
     end: vscode.Position;
     constructor(tagInfo: TagInfo, file: string, start: vscode.Position, end: vscode.Position) {
         this.tagInfo = tagInfo;

@@ -7,6 +7,7 @@ import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
 import { GenerateSerialization } from './generateSerialization';
+import { LoadSerialization } from "./loadSerialization";
 
 
 
@@ -64,10 +65,17 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "codetagging" is now active!');
 
+    // uri object that represents the current workspace path
+    let uriString = vscode.workspace.rootPath;
+    console.log(uriString);
+
     //instantiate our class that serializes objects
     //we pass it the location of the where we want to save the file
     //this is showing as an error but it works, something about string | undefined cant be assigned to string
-    let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
+    let mySerializer = new GenerateSerialization(vscode.Uri.parse(uriString));
+
+    //instantiate file loader class that will load the serialized file
+    let myLoader = new LoadSerialization(uriString);
 
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
@@ -81,11 +89,15 @@ export function activate(context: vscode.ExtensionContext) {
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
     });
-
-    //command to save taging to disk
+    //command to save array of Tag objects to disk
     let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
         //call the serialize method passing it the json of serialized tag objects to write to file
         mySerializer.serialize();
+    });
+    //command to load the serialized file (ie. the json) that contains the represntation of our tag objects
+    let readFromDisk = vscode.commands.registerCommand('extension.load', () => {
+        //call the load method
+        myLoader.readFile();
     });
 
     vscode.languages.registerHoverProvider('python', {
@@ -113,6 +125,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
     context.subscriptions.push(saveToDisk);
+    context.subscriptions.push(readFromDisk);
 }
 
 
