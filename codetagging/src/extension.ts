@@ -6,12 +6,10 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
+import Fold from './Fold';
 import { GenerateSerialization } from './generateSerialization';
 
-
-
 let hightlightedTagInfo:TagInfo|undefined;
-let foldedMethods:string[] = [];
 
 function tagSelection(tagIndex: number) {
     let textEditor = vscode.window.activeTextEditor;
@@ -55,67 +53,6 @@ function redraw() {
             activeDecorations.push(co);
         }
     }
-}
-
-async function getMethodsInCurrentFiles() {
-    let methods:vscode.SymbolInformation[] = [];
-    let textEditor = vscode.window.activeTextEditor;
-    if (textEditor) {
-        await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
-            if (symbols) {
-                for (let si of symbols) {
-                    if (si.kind === vscode.SymbolKind.Method) {
-                        methods.push(si);
-                    }
-                }
-            }
-        });
-    }
-    return methods;
-}
-
-function methodContainsHighlightedTag(method:vscode.SymbolInformation):boolean {
-    let methodStart = method.location.range.start.line;
-    let methodEnd = method.location.range.end.line;
-    for (let tag of Singleton.getTags()) {
-        if (tag.tagInfo === hightlightedTagInfo) {
-            let tagStart = tag.start.line;
-            let tagEnd = tag.end.line;
-            if ((tagStart >= methodStart && tagStart <= methodEnd) ||
-            (tagEnd >= methodStart && tagEnd <= methodEnd)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-async function unfoldFoldedMethods() {
-    let textEditor = vscode.window.activeTextEditor;
-    if (textEditor) {
-        vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
-            if (symbols) {
-                let lineNumbers:number[] = [];
-                for (let si of symbols) {
-                    if (si.kind === vscode.SymbolKind.Method && foldedMethods.includes(si.name)) {
-                        lineNumbers.push(si.location.range.start.line);
-                    }
-                }
-                vscode.commands.executeCommand('editor.unfold', {levels: 1, direction: 'up', selectionLines: lineNumbers});
-                foldedMethods = [];
-            }
-        });
-    }
-}
-async function highlightTag() {
-    let linesToCollapse: number[] = [];
-    for (let method of await getMethodsInCurrentFiles()) {
-        if (!methodContainsHighlightedTag(method)) {
-            foldedMethods.push(method.name);
-            linesToCollapse.push(method.location.range.start.line);
-        }
-    }
-    vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
 }
 
 // this method is called when your extension is activated
@@ -166,9 +103,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (hightlightedTagInfo === undefined) {
-                unfoldFoldedMethods();
+                Fold.unfoldFoldedMethods();
             } else {
-                highlightTag();
+                Fold.highlightTag(hightlightedTagInfo);
             }
 
             console.log("redraw");
