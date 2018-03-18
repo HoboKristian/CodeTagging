@@ -1,5 +1,4 @@
 import TagInfo from "./TagInfo";
-import * as vscode from 'vscode';
 import {Type} from "serializer.ts/Decorators";
 
 export default class Tag {
