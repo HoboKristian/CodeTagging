@@ -59,35 +59,47 @@ function redraw() {
     }
 }
 
-async function cyka() {
+async function getMethodsInCurrentFiles() {
+    let methods:vscode.SymbolInformation[] = [];
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor) {
-        console.log("cyka", textEditor.document);
-        let noiseCheckPromise: Thenable<any> = Promise.resolve();
-        noiseCheckPromise = vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
+        await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri).then((symbols: vscode.SymbolInformation[] | undefined) => {
             if (symbols) {
-                let linesToCollapse: number[] = [];
                 for (let si of symbols) {
                     if (si.kind === vscode.SymbolKind.Method) {
-                        let containsTag:boolean = false;
-                        for (let tag of Singleton.getTags()) {
-                            if (tag.tagInfo === hightlightedTagInfo) {
-                                if ((tag.start.line >= si.location.range.start.line && tag.start.line <= si.location.range.end.line) ||
-                                (tag.end.line >= si.location.range.start.line && tag.end.line <= si.location.range.end.line))
-                                {
-                                    containsTag =  true;
-                                }
-                            }
-                        }
-                        if (!containsTag) {
-                            linesToCollapse.push(si.location.range.start.line);
-                        }
-                        vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
+                        methods.push(si);
                     }
                 }
             }
         });
     }
+    return methods;
+}
+
+function methodContainsHighlightedTag(method:vscode.SymbolInformation):boolean {
+    let methodStart = method.location.range.start.line;
+    let methodEnd = method.location.range.end.line;
+    for (let tag of Singleton.getTags()) {
+        if (tag.tagInfo === hightlightedTagInfo) {
+            let tagStart = tag.start.line;
+            let tagEnd = tag.end.line;
+            if ((tagStart >= methodStart && tagStart <= methodEnd) ||
+            (tagEnd >= methodStart && tagEnd <= methodEnd)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+async function cyka() {
+    let linesToCollapse: number[] = [];
+    for (let method of await getMethodsInCurrentFiles()) {
+        if (!methodContainsHighlightedTag(method)) {
+            linesToCollapse.push(method.location.range.start.line);
+        }
+    }
+    vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
 }
 
 // this method is called when your extension is activated
@@ -101,8 +113,15 @@ export function activate(context: vscode.ExtensionContext) {
     //instantiate our class that serializes objects
     //we pass it the location of the where we want to save the file
     //this is showing as an error but it works, something about string | undefined cant be assigned to string
-    let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
-
+    if (vscode.workspace.rootPath) {
+        let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
+        //command to save taging to disk
+        let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
+            //call the serialize method passing it the json of serialized tag objects to write to file
+            mySerializer.serialize();
+        });
+        context.subscriptions.push(saveToDisk);
+    }
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -114,12 +133,6 @@ export function activate(context: vscode.ExtensionContext) {
     });
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
         tagSelection(2);
-    });
-
-    //command to save taging to disk
-    let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
-        //call the serialize method passing it the json of serialized tag objects to write to file
-        mySerializer.serialize();
     });
 
     vscode.languages.registerHoverProvider('javascript', {
@@ -153,7 +166,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
-    context.subscriptions.push(saveToDisk);
 }
 
 
