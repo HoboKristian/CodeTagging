@@ -83,6 +83,7 @@
     },
     "dependencies": {
         "@types/lodash": "^4.14.105",
+        "buffered-spawn": "^3.3.2",
         "lodash": "^4.17.5",
         "serializer.ts": "0.0.12"
     }
