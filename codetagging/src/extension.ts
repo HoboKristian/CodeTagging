@@ -56,9 +56,11 @@ function redraw() {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         for (let tag of Singleton.getTags()) {
-            let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
-            textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
-            activeDecorations.push(co);
+            if (tag.file === textEditor.document.fileName) {
+                let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
+                textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
+                activeDecorations.push(co);
+            }
         }
     }
 }
