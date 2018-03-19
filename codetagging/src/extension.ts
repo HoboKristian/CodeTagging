@@ -7,6 +7,7 @@ import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
 import Fold from './Fold';
+import * as Hiding from './Hiding';
 import { GenerateSerialization } from './generateSerialization';
 import { LoadSerialization } from "./loadSerialization";
 
@@ -121,6 +122,48 @@ export function activate(context: vscode.ExtensionContext) {
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
+    let tagMenu = vscode.commands.registerCommand('extension.tagMenu', () => {
+        // "Tag selection"
+        // key: ctrl/cmd + shift + T
+        // Command for tagging the currently selected code
+        let existingTags = ["tag1", "tag2", "tag3", "tag4", "testTag1", "testTag2", "testTag3"]; // TODO this should be changed to generate the array from the current list of tag objects
+        existingTags.unshift("Create New Tag"); // add option to create a new tag to array
+
+        // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
+        vscode.window.showQuickPick(existingTags).then(input => {
+            // executes when user presses Enter or selects a suggested tag name
+            // if 'Create New Tag' is selected or entered, open InputBox to enter new tag name
+            // if no tag name is entered or the tag name is not an existing tag, code is not tagged
+            // if an existing tag is entered or selected, add the current code selection to that tag
+            if (typeof input !== 'undefined') {
+                if (input === 'Create New Tag') {
+                    // open InputBox to create a new tag
+                    vscode.window.showInputBox({prompt: 'Enter new tag name'}).then(value => {
+                        // executes when user presses Enter
+                        // if no tag name is entered, no tag is created
+                        // if the entered tag name already exists, no tag is created
+                        // otherwise, create new tag and add the selected code to the new tag
+                        if (!value) {
+                            vscode.window.showErrorMessage('No tag name was entered, code was not tagged');
+                        } else if (existingTags.includes(value)) {
+                            vscode.window.showErrorMessage('Tag already exists, code was not tagged');
+                        } else {
+                            // TODO actually create tag and add code selection to the new tag
+                            vscode.window.showInformationMessage('Tag created, code was tagged with \"' + value + '\"');
+                        }
+                    });
+                } else if (existingTags.includes(input)) {
+                    // TODO actually add current code selection to the chosen tag
+                    vscode.window.showInformationMessage('Code was tagged with \"' + input + '\"');
+                } else {
+                    // shouldn't reach this point
+                    vscode.window.showErrorMessage('Code was not tagged');
+                }
+            } else {
+                vscode.window.showErrorMessage('No tag was selected, code was not tagged');
+            }
+        });
+    });
     let disposable = vscode.commands.registerCommand('extension.tag1', () => {
         tagSelection(0);
     });
@@ -162,6 +205,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+    context.subscriptions.push(tagMenu);
 }
 
 

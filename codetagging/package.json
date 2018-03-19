@@ -26,8 +26,20 @@
             {
                 "command": "extension.load",
                 "title": "Load"
+            },
+            {
+                "command": "extension.tagMenu",
+                "title": "Tag selection"
             }
         ],
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "extension.tagMenu",
+                    "when": "editorTextFocus"
+                }
+            ]
+        },
         "keybindings": [
             {
                 "command": "extension.tag1",
@@ -45,6 +57,12 @@
                 "command": "extension.tag3",
                 "key": "",
                 "mac": "cmd+shift+z 3",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.tagMenu",
+                "key": "ctrl+shift+t",
+                "mac": "cmd+shift+t",
                 "when": "editorTextFocus"
             }
         ]
