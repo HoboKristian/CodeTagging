@@ -30,6 +30,10 @@
             {
                 "command": "extension.tagMenu",
                 "title": "Tag selection"
+            },
+            {
+                "command": "extension.tagIsolate",
+                "title": "Isolate tag"
             }
         ],
         "menus": {
@@ -64,6 +68,12 @@
                 "key": "ctrl+shift+t",
                 "mac": "cmd+shift+t",
                 "when": "editorTextFocus"
+            },
+            {
+                "command": "extension.tagIsolate",
+                "key": "ctrl+shift+r",
+                "mac": "cmd+shift+r",
+                "when": "editorFocus"
             }
         ]
     },

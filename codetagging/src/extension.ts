@@ -94,9 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(loadFromFile);
 
     }
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
+
     let tagMenu = vscode.commands.registerCommand('extension.tagMenu', () => {
         // "Tag selection"
         // key: ctrl/cmd + shift + T
@@ -138,6 +136,37 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showErrorMessage('No tag was selected, code was not tagged');
             }
         });
+    });
+    let tagIsolated = false;
+    let tagIsolate = vscode.commands.registerCommand('extension.tagIsolate', () => {
+        // "Isolate tag"
+        // key: ctrl/cmd + shift + R
+        // Command for isolating a specified tag
+        let existingTags = ["tag1", "tag2", "tag3", "tag4", "testTag1", "testTag2", "testTag3"]; // TODO this should be changed to generate the array from the current list of tag objects
+
+        if (tagIsolated) {
+            // TODO turn off all isolation
+            vscode.window.showInformationMessage('Isolation deactivated');
+        } else {
+            // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
+            vscode.window.showQuickPick(existingTags).then(input => {
+                // executes when user presses Enter or selects a suggested tag name
+                // if no tag name is entered or the tag name is not an existing tag, no tag is isolated
+                // if an existing tag is entered or selected, isolate that tag
+                if (typeof input !== 'undefined') {
+                    if (existingTags.includes(input)) {
+                        // TODO actually isolate the selected tag
+                        tagIsolated = !tagIsolated;
+                        vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
+                    } else {
+                        // shouldn't reach this point
+                        vscode.window.showErrorMessage('No tag was isolated');
+                    }
+                } else {
+                    vscode.window.showErrorMessage('No tag was isolated');
+                }
+            });
+        }
     });
     let disposable = vscode.commands.registerCommand('extension.tag1', () => {
         tagSelection(0);
@@ -181,6 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
     context.subscriptions.push(tagMenu);
+    context.subscriptions.push(tagIsolate);
 }
 
 
