@@ -46,22 +46,19 @@ function tagSelection(tagIndex: number) {
 let activeDecorations: vscode.TextEditorDecorationType[] = [];
 
 function redraw() {
-    for (let dec of activeDecorations) {
-        if (dec) {
-            dec.dispose();
-        }
-    }
+    activeDecorations.forEach(dec => dec.dispose());
     activeDecorations = [];
 
     let textEditor = vscode.window.activeTextEditor;
-    if (textEditor !== undefined) {
-        for (let tag of Singleton.getTags()) {
-            if (tag.file === textEditor.document.fileName) {
-                let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
-                textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
-                activeDecorations.push(co);
-            }
-        }
+    if (textEditor) {
+        let editor = textEditor; // For some reason not doing this gives might be undefined error
+        Singleton.getTags()
+        .filter(tag => tag.file === editor.document.fileName)
+        .forEach(tag => {
+            let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
+            editor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
+            activeDecorations.push(co);
+        });
     }
 }
 
@@ -73,6 +70,26 @@ function walkSync(dir:string):string[] {
     return (<string[]>fs.readdirSync(dir))
     .map(f => walkSync(path.join(dir, f)))
     .reduce((a, b) => a.concat(b), []);
+}
+
+function filesThatDoNotContainTagInfo(tagInfo:TagInfo):string[]|undefined {
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor) {
+        let ws = vscode.workspace.workspaceFolders;
+        if (ws) {
+            const pruneTagPathForFolder = (folder:string) => Singleton.getTags()
+            .filter(tag => tag.tagInfo === tagInfo)
+            .map(tag => tag.file)
+            .map(e => e.replace(folder, ''));
+
+            return ws
+            .map(workspace => workspace.uri.fsPath)
+            .map(folder => walkSync(folder)
+                        .map(e => e.replace(folder, ''))
+                        .filter(f => !pruneTagPathForFolder(folder).includes(f)))
+            .reduce((a, b) => a.concat(b), []);
+        }
+    }
 }
 
 // this method is called when your extension is activated
@@ -183,23 +200,9 @@ export function activate(context: vscode.ExtensionContext) {
                 Hiding.unhideFiles();
                 console.log("unhide");
             } else {
-                let textEditor = vscode.window.activeTextEditor;
-                if (textEditor !== undefined) {
-                    let ws = vscode.workspace.workspaceFolders;
-                    if (ws) {
-                        let filesWithTag = Singleton.getTags()
-                        .map(tag => tag.file)
-                        .map(e => e.replace(ws[0].uri.fsPath, ''));
-
-                        let allFiles = ws
-                        .map(workspace => workspace.uri.fsPath)
-                        .map(folder => walkSync(folder)
-                                    .map(e => e.replace(folder, ''))
-                                    .filter(f => !filesWithTag.includes(f)))
-                        .reduce((a, b) => a.concat(b), []);
-                        Hiding.hideFiles(allFiles);
-                        console.log("hide");
-                    }
+                let allFiles = filesThatDoNotContainTagInfo(hightlightedTagInfo);
+                if (allFiles) {
+                    Hiding.hideFiles(allFiles);
                 }
                 Fold.highlightTag(hightlightedTagInfo);
             }
