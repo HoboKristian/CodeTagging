@@ -8,10 +8,11 @@ enum ChangeType {
 }
 
 export default class CodeChangeListener {
+    disposable: vscode.Disposable;
     tagsMovedCallback: Function;
     oldLineCount: number = 0;
     constructor(context: vscode.ExtensionContext, callback: Function) {
-        vscode.workspace.onDidChangeTextDocument(this._onEvent, this, context.subscriptions);
+        this.disposable = vscode.workspace.onDidChangeTextDocument(this._onEvent, this, context.subscriptions);
         this.tagsMovedCallback = callback;
         let textEditor = vscode.window.activeTextEditor;
         if (textEditor) {
@@ -112,5 +113,8 @@ export default class CodeChangeListener {
             tag.start = tagStart;
             tag.end = tagEnd;
         }
+    }
+    dispose() {
+        this.disposable.dispose();
     }
 }

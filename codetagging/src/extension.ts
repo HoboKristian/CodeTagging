@@ -10,10 +10,13 @@ import Fold from './Fold';
 import * as Hiding from './Hiding';
 import { GenerateSerialization } from './generateSerialization';
 import { LoadSerialization } from "./loadSerialization";
+import TextDocumentChanged from './FileChangeListener';
 
 const fs = require('fs');
 const path = require('path');
 
+let codeChangeListener:CodeChangeListener;
+let textDocumentChanged:TextDocumentChanged;
 let hightlightedTagInfo:TagInfo|undefined;
 
 function relativeFilePathForDocument(document:vscode.TextDocument):string {
@@ -137,6 +140,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(loadFromFile);
 
     }
+
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
@@ -225,7 +229,8 @@ export function activate(context: vscode.ExtensionContext) {
             return new vscode.Hover('');
         }
     });
-    let codeChangeListener = new CodeChangeListener(context, redraw);
+    codeChangeListener = new CodeChangeListener(context, redraw);
+    textDocumentChanged = new TextDocumentChanged(context, redraw);
 
     // subscribe to selection change and editor activation events
     context.subscriptions.push(disposable);
@@ -237,4 +242,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+    codeChangeListener.dispose();
+    textDocumentChanged.dispose();
 }
