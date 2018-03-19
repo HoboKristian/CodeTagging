@@ -85,18 +85,6 @@ export function activate(context: vscode.ExtensionContext) {
     let uriString = vscode.workspace.rootPath;
     console.log(uriString);
 
-    let textEditor = vscode.window.activeTextEditor;
-    if (textEditor !== undefined) {
-        let ws = vscode.workspace.workspaceFolders;
-        if (ws) {
-            let allFiles = ws
-            .map(workspace => workspace.uri.fsPath)
-            .map(folder => walkSync(folder).map(e => e.replace(folder, '')))
-            .reduce((a, b) => a.concat(b), []);
-            console.log(allFiles);
-        }
-    }
-
     //instantiate our class that serializes objects
     //we pass it the location of the where we want to save the file
     //this is showing as an error but it works, something about string | undefined cant be assigned to string
@@ -190,7 +178,27 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (hightlightedTagInfo === undefined) {
                 Fold.unfoldFoldedMethods();
+                Hiding.unhideFiles();
+                console.log("unhide");
             } else {
+                let textEditor = vscode.window.activeTextEditor;
+                if (textEditor !== undefined) {
+                    let ws = vscode.workspace.workspaceFolders;
+                    if (ws) {
+                        let filesWithTag = Singleton.getTags()
+                        .map(tag => tag.file)
+                        .map(e => e.replace(ws[0].uri.fsPath, ''));
+
+                        let allFiles = ws
+                        .map(workspace => workspace.uri.fsPath)
+                        .map(folder => walkSync(folder)
+                                    .map(e => e.replace(folder, ''))
+                                    .filter(f => !filesWithTag.includes(f)))
+                        .reduce((a, b) => a.concat(b), []);
+                        Hiding.hideFiles(allFiles);
+                        console.log("hide");
+                    }
+                }
                 Fold.highlightTag(hightlightedTagInfo);
             }
 
