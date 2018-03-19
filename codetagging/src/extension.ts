@@ -16,15 +16,27 @@ const path = require('path');
 
 let hightlightedTagInfo:TagInfo|undefined;
 
+function relativeFilePathForDocument(document:vscode.TextDocument):string {
+    let ws = vscode.workspace.getWorkspaceFolder(document.uri);
+    let fileName = document.fileName;
+    if (ws) {
+        fileName.replace(ws.uri.fsPath, '');
+    }
+    return fileName;
+}
+
 function tagSelection(tagIndex: number) {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor !== undefined) {
         let tags: Tag[] = Singleton.getTags();
         let tagInfos: TagInfo[] = Singleton.getTagInfos();
         for (let selection of textEditor.selections) {
-            let tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line);
+            let tagInfo = tagInfos[tagIndex];
+            let fileName = relativeFilePathForDocument(textEditor.document);
+
+            let tag = new Tag(tagInfo, fileName, selection.start.line + 1, selection.end.line);
             if (selection.start.line === selection.end.line || selection.end.character > 0) {
-                tag = new Tag(tagInfos[tagIndex], textEditor.document.fileName, selection.start.line + 1, selection.end.line + 1);
+                tag = new Tag(tagInfo, fileName, selection.start.line + 1, selection.end.line + 1);
             }
             let overlappingTag;
             for (let oldTag of tags) {
@@ -52,8 +64,9 @@ function redraw() {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor) {
         let editor = textEditor; // For some reason not doing this gives might be undefined error
+        let fileName = relativeFilePathForDocument(textEditor.document);
         Singleton.getTags()
-        .filter(tag => tag.file === editor.document.fileName)
+        .filter(tag => tag.file === fileName)
         .forEach(tag => {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(hightlightedTagInfo));
             editor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
@@ -77,16 +90,15 @@ function filesThatDoNotContainTagInfo(tagInfo:TagInfo):string[]|undefined {
     if (textEditor) {
         let ws = vscode.workspace.workspaceFolders;
         if (ws) {
-            const pruneTagPathForFolder = (folder:string) => Singleton.getTags()
+            const tagPaths = Singleton.getTags()
             .filter(tag => tag.tagInfo === tagInfo)
-            .map(tag => tag.file)
-            .map(e => e.replace(folder, ''));
+            .map(tag => tag.file);
 
             return ws
             .map(workspace => workspace.uri.fsPath)
             .map(folder => walkSync(folder)
                         .map(e => e.replace(folder, ''))
-                        .filter(f => !pruneTagPathForFolder(folder).includes(f)))
+                        .filter(f => !tagPaths.includes(f)))
             .reduce((a, b) => a.concat(b), []);
         }
     }
@@ -184,30 +196,32 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.languages.registerHoverProvider('javascript', {
         provideHover(document, position, token) {
             let textEditor = vscode.window.activeTextEditor;
-            if (textEditor !== undefined) {
-                let hoveredLine = position.line;
-                hightlightedTagInfo = undefined;
-                for (let tag of Singleton.getTags()) {
-                    if (hoveredLine >= tag.start && hoveredLine <= tag.end) {
-                        hightlightedTagInfo = tag.tagInfo;
-                        console.log("highlight");
-                    }
-                }
+            if (textEditor === undefined) {
+                return new vscode.Hover('');
             }
 
-            if (hightlightedTagInfo === undefined) {
-                Fold.unfoldFoldedMethods();
-                Hiding.unhideFiles();
-                console.log("unhide");
-            } else {
+            let fileName = relativeFilePathForDocument(textEditor.document);
+            let highlightedTag = Singleton.getTags()
+            .filter(tag => tag.file === fileName)
+            .find(tag => (position.line >= tag.start && position.line <= tag.end));
+
+            hightlightedTagInfo = undefined;
+            if (highlightedTag) {
+                hightlightedTagInfo = highlightedTag.tagInfo;
+            }
+            
+            if (hightlightedTagInfo) {
                 let allFiles = filesThatDoNotContainTagInfo(hightlightedTagInfo);
                 if (allFiles) {
                     Hiding.hideFiles(allFiles);
                 }
                 Fold.highlightTag(hightlightedTagInfo);
+            } else {
+                Fold.unfoldFoldedMethods();
+                Hiding.unhideFiles();
+                console.log("unhide");
             }
 
-            console.log("redraw");
             redraw();
             return new vscode.Hover('');
         }
