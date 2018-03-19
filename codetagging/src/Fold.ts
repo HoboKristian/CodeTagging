@@ -12,7 +12,7 @@ namespace Fold {
         if (textEditor) {
             let symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri);
             if (symbols) {
-                return symbols.filter(element => element.kind === vscode.SymbolKind.Method);
+                return symbols.filter(element => element.kind === vscode.SymbolKind.Method || element.kind === vscode.SymbolKind.Function);
             }
         }
         return [];
@@ -22,9 +22,15 @@ namespace Fold {
         let methodStart = method.location.range.start.line;
         let methodEnd = method.location.range.end.line;
         
-        return highlightedTags.some(tag => 
-            ((tag.start >= methodStart && tag.start <= methodEnd) ||
-            (tag.end >= methodStart && tag.end <= methodEnd)));
+        for (let tag of highlightedTags) {
+            console.log(methodStart, methodEnd);
+            if ((tag.start >= methodStart && tag.start <= methodEnd) ||
+            (tag.end >= methodStart && tag.end <= methodEnd)) {
+                return true;
+            }
+        }
+        return false;
+        //return highlightedTags.some(tag =>   
     }
 
     export async function unfoldFoldedMethods() {
@@ -33,7 +39,7 @@ namespace Fold {
             let symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri);
             if (symbols) {
                 let lineNumbers:number[] = symbols
-                .filter(si => (si.kind === vscode.SymbolKind.Method))
+                .filter(si => (si.kind === vscode.SymbolKind.Method || si.kind === vscode.SymbolKind.Function))
                 .filter(si => (foldedMethods.includes(si.name)))
                 .map(si => si.location.range.start.line);
                 vscode.commands.executeCommand('editor.unfold', {levels: 1, direction: 'up', selectionLines: lineNumbers});
@@ -50,6 +56,7 @@ namespace Fold {
             foldedMethods.push(method.name);
             linesToCollapse.push(method.location.range.start.line);
         });
+        console.log(foldedMethods, linesToCollapse);
         vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
     }
 }

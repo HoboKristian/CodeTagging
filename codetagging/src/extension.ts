@@ -6,6 +6,7 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
+import Color from './Color';
 import Fold from './Fold';
 import * as Hiding from './Hiding';
 import { GenerateSerialization } from './generateSerialization';
@@ -25,13 +26,16 @@ function relativeFilePathForDocument(document:vscode.TextDocument):string {
     return (ws) ? fileName.replace(ws.uri.fsPath, '') : fileName;
 }
 
-function tagSelection(tagIndex: number) {
+function tagIndex(tagIndex: number) {
+    tagSelection(Singleton.getTagInfos()[tagIndex]);
+}
+
+function tagSelection(tagInfo: TagInfo) {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor === undefined) {
         return;
     }
     let tags: Tag[] = Singleton.getTags();
-    let tagInfo = Singleton.getTagInfos()[tagIndex];
     let fileName = relativeFilePathForDocument(textEditor.document);
     for (let selection of textEditor.selections) {
         let tag = new Tag(tagInfo, fileName, selection.start.line + 1, selection.end.line);
@@ -116,16 +120,16 @@ export function activate(context: vscode.ExtensionContext) {
     createTagMenu(context);
 
     let disposable = vscode.commands.registerCommand('extension.tag1', () => {
-        tagSelection(0);
+        tagIndex(0);
     });
     let disposable2 = vscode.commands.registerCommand('extension.tag2', () => {
-        tagSelection(1);
+        tagIndex(1);
     });
     let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
-        tagSelection(2);
+        tagIndex(2);
     });
 
-    vscode.languages.registerHoverProvider('javascript', {
+    /*vscode.languages.registerHoverProvider('javascript', {
         provideHover(document, position, token) {
             let textEditor = vscode.window.activeTextEditor;
             if (textEditor === undefined) {
@@ -157,7 +161,7 @@ export function activate(context: vscode.ExtensionContext) {
             redraw();
             return new vscode.Hover('');
         }
-    });
+    });*/
     codeChangeListener = new CodeChangeListener(context, redraw);
     textDocumentChanged = new TextDocumentChanged(context, redraw);
 
@@ -199,7 +203,7 @@ function createTagMenu(context:vscode.ExtensionContext) {
         // "Tag selection"
         // key: ctrl/cmd + shift + T
         // Command for tagging the currently selected code
-        let existingTags = ["tag1", "tag2", "tag3", "tag4", "testTag1", "testTag2", "testTag3"]; // TODO this should be changed to generate the array from the current list of tag objects
+        let existingTags = Singleton.getTagInfos().map(tagInfo => tagInfo.name);
         existingTags.unshift("Create New Tag"); // add option to create a new tag to array
 
         // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
@@ -217,23 +221,34 @@ function createTagMenu(context:vscode.ExtensionContext) {
                         // if the entered tag name already exists, no tag is created
                         // otherwise, create new tag and add the selected code to the new tag
                         if (!value) {
-                            vscode.window.showErrorMessage('No tag name was entered, code was not tagged');
+                            //vscode.window.showErrorMessage('No tag name was entered, code was not tagged');
                         } else if (existingTags.includes(value)) {
-                            vscode.window.showErrorMessage('Tag already exists, code was not tagged');
+                            //vscode.window.showErrorMessage('Tag already exists, code was not tagged');
                         } else {
-                            // TODO actually create tag and add code selection to the new tag
-                            vscode.window.showInformationMessage('Tag created, code was tagged with \"' + value + '\"');
+                            // new taginfo.name = input
+                            // TODO actually create taginfo and add code selection to the new tag
+                            let newTagInfo = new TagInfo(new Color(2), input);
+                            Singleton.getTagInfos().push(newTagInfo);
+                            if (newTagInfo) {
+                                tagSelection(newTagInfo);
+                            }
+                            redraw();
+                            //vscode.window.showInformationMessage('Tag created, code was tagged with \"' + value + '\"');
                         }
                     });
                 } else if (existingTags.includes(input)) {
-                    // TODO actually add current code selection to the chosen tag
-                    vscode.window.showInformationMessage('Code was tagged with \"' + input + '\"');
+                    let tagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+                    if (tagInfo) {
+                        tagSelection(tagInfo);
+                    }
+                    redraw();
+                    //vscode.window.showInformationMessage('Code was tagged with \"' + input + '\"');
                 } else {
                     // shouldn't reach this point
-                    vscode.window.showErrorMessage('Code was not tagged');
+                    //vscode.window.showErrorMessage('Code was not tagged');
                 }
             } else {
-                vscode.window.showErrorMessage('No tag was selected, code was not tagged');
+                //vscode.window.showErrorMessage('No tag was selected, code was not tagged');
             }
         });
     }));
@@ -242,11 +257,15 @@ function createTagMenu(context:vscode.ExtensionContext) {
         // "Isolate tag"
         // key: ctrl/cmd + shift + R
         // Command for isolating a specified tag
-        let existingTags = ["tag1", "tag2", "tag3", "tag4", "testTag1", "testTag2", "testTag3"]; // TODO this should be changed to generate the array from the current list of tag objects
+        let existingTags = Singleton.getTagInfos().map(tagInfo => tagInfo.name);
 
         if (tagIsolated) {
-            // TODO turn off all isolation
-            vscode.window.showInformationMessage('Isolation deactivated');
+            hightlightedTagInfo = undefined;
+            tagIsolated = !tagIsolated;
+            Hiding.unhideFiles();
+            Fold.unfoldFoldedMethods();
+            redraw();
+            //vscode.window.showInformationMessage('Isolation deactivated');
         } else {
             // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
             vscode.window.showQuickPick(existingTags).then(input => {
@@ -257,13 +276,22 @@ function createTagMenu(context:vscode.ExtensionContext) {
                     if (existingTags.includes(input)) {
                         // TODO actually isolate the selected tag
                         tagIsolated = !tagIsolated;
-                        vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
+                        hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+                        if (hightlightedTagInfo) {
+                            let allFiles = filesThatDoNotContainTagInfo(hightlightedTagInfo);
+                            if (allFiles) {
+                                Hiding.hideFiles(allFiles);
+                            }
+                            Fold.highlightTag(hightlightedTagInfo);
+                        }
+                        redraw();
+                        //vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
                     } else {
                         // shouldn't reach this point
-                        vscode.window.showErrorMessage('No tag was isolated');
+                        //vscode.window.showErrorMessage('No tag was isolated');
                     }
                 } else {
-                    vscode.window.showErrorMessage('No tag was isolated');
+                    //vscode.window.showErrorMessage('No tag was isolated');
                 }
             });
         }
