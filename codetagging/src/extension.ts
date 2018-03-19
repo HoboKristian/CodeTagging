@@ -10,6 +10,9 @@ import Fold from './Fold';
 import { GenerateSerialization } from './generateSerialization';
 import { LoadSerialization } from "./loadSerialization";
 
+const fs = require('fs');
+const path = require('path');
+
 let hightlightedTagInfo:TagInfo|undefined;
 
 function tagSelection(tagIndex: number) {
@@ -59,6 +62,16 @@ function redraw() {
     }
 }
 
+function walkSync(dir:string):string[] {
+    if (!fs.lstatSync(dir).isDirectory()) {
+        return [dir];
+    }
+    
+    return (<string[]>fs.readdirSync(dir))
+    .map(f => walkSync(path.join(dir, f)))
+    .reduce((a, b) => a.concat(b), []);
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -70,6 +83,18 @@ export function activate(context: vscode.ExtensionContext) {
     // uri object that represents the current workspace path
     let uriString = vscode.workspace.rootPath;
     console.log(uriString);
+
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor !== undefined) {
+        let ws = vscode.workspace.workspaceFolders;
+        if (ws) {
+            let allFiles = ws
+            .map(workspace => workspace.uri.fsPath)
+            .map(folder => walkSync(folder).map(e => e.replace(folder, '')))
+            .reduce((a, b) => a.concat(b), []);
+            console.log(allFiles);
+        }
+    }
 
     //instantiate our class that serializes objects
     //we pass it the location of the where we want to save the file
