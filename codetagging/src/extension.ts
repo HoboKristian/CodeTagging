@@ -19,10 +19,7 @@ let hightlightedTagInfo:TagInfo|undefined;
 function relativeFilePathForDocument(document:vscode.TextDocument):string {
     let ws = vscode.workspace.getWorkspaceFolder(document.uri);
     let fileName = document.fileName;
-    if (ws) {
-        fileName.replace(ws.uri.fsPath, '');
-    }
-    return fileName;
+    return (ws) ? fileName.replace(ws.uri.fsPath, '') : fileName;
 }
 
 function tagSelection(tagIndex: number) {
@@ -93,6 +90,8 @@ function filesThatDoNotContainTagInfo(tagInfo:TagInfo):string[]|undefined {
             const tagPaths = Singleton.getTags()
             .filter(tag => tag.tagInfo === tagInfo)
             .map(tag => tag.file);
+
+            console.log(tagPaths);
 
             return ws
             .map(workspace => workspace.uri.fsPath)
