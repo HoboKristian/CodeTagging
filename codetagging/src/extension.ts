@@ -234,7 +234,18 @@ function createTagMenu(context:vscode.ExtensionContext) {
         // key: ctrl/cmd + shift + R
         // Command for isolating a specified tag
         let existingTags = Singleton.getTagInfos().map(tagInfo => tagInfo.name);
-
+        let textEditor = vscode.window.activeTextEditor;
+        let currentTagInfo:TagInfo|undefined = undefined;
+        let baseCurrentString = "Highlight Current Tag: ";
+        if (textEditor) {
+            let currentLine = textEditor.selection.start.line;
+            let currentTag = Singleton.getTags()
+            .find(tag => tag.start <= currentLine && tag.end >= currentLine);
+            if (currentTag) {
+                currentTagInfo = currentTag.tagInfo;
+                existingTags.unshift(baseCurrentString + currentTagInfo.name);
+            }
+        }
         if (tagIsolated) {
             hightlightedTagInfo = undefined;
             tagIsolated = !tagIsolated;
@@ -250,9 +261,12 @@ function createTagMenu(context:vscode.ExtensionContext) {
                 // if an existing tag is entered or selected, isolate that tag
                 if (typeof input !== 'undefined') {
                     if (existingTags.includes(input)) {
-                        // TODO actually isolate the selected tag
                         tagIsolated = !tagIsolated;
-                        hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+                        if (input.startsWith(baseCurrentString) && currentTagInfo !== undefined) {
+                            hightlightedTagInfo = currentTagInfo;
+                        } else {
+                            hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+                        }
                         if (hightlightedTagInfo) {
                             let allFiles = filesThatDoNotContainTagInfo(hightlightedTagInfo);
                             if (allFiles) {
