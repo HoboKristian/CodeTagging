@@ -5,13 +5,9 @@ import Tag from './Tag';
 export default class Singleton
 {
     private static _instance: Singleton;
-    private tagInfos: TagInfo[];
-    private tags: Tag[];
+    private tagInfos: TagInfo[] = [];
+    private tags: Tag[] = [];
     private constructor() {
-        this.tagInfos = [new TagInfo(new Color(0), "DB"),
-                            new TagInfo(new Color(1), "API"),
-                            new TagInfo(new Color(2), "BUG")];
-        this.tags = [];
     }
 
     public static getTags() {
@@ -36,6 +32,12 @@ export default class Singleton
             strings.push(taginfo.name);
         }
         return strings;
+    }
+
+    public static createNewTagInfo(tagName: string):TagInfo {
+        let newTagInfo = new TagInfo(new Color(this.getTagInfos().length), tagName);
+        this.getTagInfos().push(newTagInfo);
+        return newTagInfo;
     }
 
     public static get Instance() {

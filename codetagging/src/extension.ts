@@ -6,7 +6,6 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
-import Color from './Color';
 import Fold from './Fold';
 import * as Hiding from './Hiding';
 import { GenerateSerialization } from './generateSerialization';
@@ -35,25 +34,35 @@ function tagSelection(tagInfo: TagInfo) {
     if (textEditor === undefined) {
         return;
     }
+    for (let selection of textEditor.selections) {
+        let from = selection.start.line + 1;
+        let to = selection.end.line;
+        if (selection.start.line === selection.end.line || selection.end.character > 0) {
+            to = selection.end.line + 1;
+        }
+        tagLines(tagInfo, from ,to);
+    }
+}
+function tagLines(tagInfo:TagInfo, from: number, to: number) {
+    let textEditor = vscode.window.activeTextEditor;
+    if (textEditor === undefined) {
+        return;
+    }
     let tags: Tag[] = Singleton.getTags();
     let fileName = relativeFilePathForDocument(textEditor.document);
-    for (let selection of textEditor.selections) {
-        let tag = new Tag(tagInfo, fileName, selection.start.line + 1, selection.end.line);
-        if (selection.start.line === selection.end.line || selection.end.character > 0) {
-            tag = new Tag(tagInfo, fileName, selection.start.line + 1, selection.end.line + 1);
+    let tag = new Tag(tagInfo, fileName, from, to);
+
+    let overlappingTag;
+    for (let oldTag of tags) {
+        if (oldTag.overlaps(tag)) {
+            overlappingTag = oldTag;
         }
-        let overlappingTag;
-        for (let oldTag of tags) {
-            if (oldTag.overlaps(tag)) {
-                overlappingTag = oldTag;
-            }
-        }
-        if (overlappingTag !== undefined) {
-            overlappingTag.start = Math.min(tag.start, overlappingTag.start);
-            overlappingTag.end = Math.max(tag.end, overlappingTag.end);
-        } else {
-            Singleton.addTag(tag);
-        }
+    }
+    if (overlappingTag !== undefined) {
+        overlappingTag.start = Math.min(tag.start, overlappingTag.start);
+        overlappingTag.end = Math.max(tag.end, overlappingTag.end);
+    } else {
+        Singleton.addTag(tag);
     }
     redraw();
 }
@@ -129,41 +138,13 @@ export function activate(context: vscode.ExtensionContext) {
         tagIndex(2);
     });
 
-    /*vscode.languages.registerHoverProvider('javascript', {
-        provideHover(document, position, token) {
-            let textEditor = vscode.window.activeTextEditor;
-            if (textEditor === undefined) {
-                return new vscode.Hover('');
-            }
-
-            let fileName = relativeFilePathForDocument(textEditor.document);
-            let highlightedTag = Singleton.getTags()
-            .filter(tag => tag.file === fileName)
-            .find(tag => (position.line >= tag.start && position.line <= tag.end));
-
-            hightlightedTagInfo = undefined;
-            if (highlightedTag) {
-                hightlightedTagInfo = highlightedTag.tagInfo;
-            }
-            
-            if (hightlightedTagInfo) {
-                let allFiles = filesThatDoNotContainTagInfo(hightlightedTagInfo);
-                if (allFiles) {
-                    Hiding.hideFiles(allFiles);
-                }
-                Fold.highlightTag(hightlightedTagInfo);
-            } else {
-                Fold.unfoldFoldedMethods();
-                Hiding.unhideFiles();
-                console.log("unhide");
-            }
-
-            redraw();
-            return new vscode.Hover('');
-        }
-    });*/
     codeChangeListener = new CodeChangeListener(context, redraw);
     textDocumentChanged = new TextDocumentChanged(context, redraw);
+
+    for (let i = 1; i <= 100; i += 3) {
+        let ti = Singleton.createNewTagInfo(String.fromCharCode(i));
+        tagLines(ti, i, i+2);
+    }
 
     // subscribe to selection change and editor activation events
     context.subscriptions.push(disposable);
@@ -225,11 +206,8 @@ function createTagMenu(context:vscode.ExtensionContext) {
                         } else if (existingTags.includes(value)) {
                             //vscode.window.showErrorMessage('Tag already exists, code was not tagged');
                         } else {
-                            let newTagInfo = new TagInfo(new Color(2), value);
-                            Singleton.getTagInfos().push(newTagInfo);
-                            if (newTagInfo) {
-                                tagSelection(newTagInfo);
-                            }
+                            let newTagInfo = Singleton.createNewTagInfo(value);
+                            tagSelection(newTagInfo);
                             redraw();
                             //vscode.window.showInformationMessage('Tag created, code was tagged with \"' + value + '\"');
                         }
