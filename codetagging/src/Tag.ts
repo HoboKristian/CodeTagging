@@ -34,7 +34,7 @@ export default class Tag {
             }
             //let regexp = new RegExp('/[\n\r]+/g');
             let cleanedOutput = stdout.toString().replace("\n", "");
-            console.log(cleanedOutput);
+            //console.log(cleanedOutput);
             this.author = cleanedOutput;
             
         });

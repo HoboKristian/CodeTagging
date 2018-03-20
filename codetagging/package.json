@@ -34,7 +34,11 @@
             {
                 "command": "extension.tagIsolate",
                 "title": "Isolate tag"
-            }
+            },
+            {
+				"command": "extension.showTagPreview",
+				"title": "Show Tags"
+			}
         ],
         "menus": {
             "editor/context": [

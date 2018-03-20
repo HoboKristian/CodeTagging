@@ -62,7 +62,7 @@ export class LoadSerialization{
                 if(element.tagInfo.name === this.tagInfos[i].name){
                     element.tagInfo = this.tagInfos[i];
                 }
-              }
+            }
 
             //then add this element(current tag object) into our singleton
             Singleton.addTag(element);

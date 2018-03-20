@@ -12,6 +12,7 @@ import * as Hiding from './Hiding';
 import { GenerateSerialization } from './generateSerialization';
 import { LoadSerialization } from "./loadSerialization";
 import TextDocumentChanged from './FileChangeListener';
+import { TextDocumentContentProvider } from './tagVisualizationProvider';
 
 const fs = require('fs');
 const path = require('path');
@@ -116,6 +117,53 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "codetagging" is now active!');
 
+    //section for setting up the html preview
+    //this is the uri for our visualization that will be generated (its a virtual document no actual html file will exist)
+    let previewUri = vscode.Uri.parse('tag-preview://authority/tag-preview');
+
+    //create a new instance  of our TextDocumentContentProvider that returns  
+    let provider = new TextDocumentContentProvider();
+    //register a provider giving our provider class and a name 
+    let registration = vscode.workspace.registerTextDocumentContentProvider('tag-preview', provider);
+    //watches if the file changes at the workspace level
+    vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+		if (e.document === vscode.window.activeTextEditor.document) {
+			provider.update(previewUri);
+		}
+	});
+    //watches if text editor selection changed in the open editor
+	vscode.window.onDidChangeTextEditorSelection((e: vscode.TextEditorSelectionChangeEvent) => {
+		if (e.textEditor === vscode.window.activeTextEditor) {
+			provider.update(previewUri);
+		}
+    });
+    
+    //create our disposable
+    let htmlPreviewDisposable = vscode.commands.registerCommand('extension.showTagPreview', () => {
+		return vscode.commands.executeCommand('vscode.previewHtml', previewUri, vscode.ViewColumn.Two, 'Tag Visualization').then((success) => {
+		}, (reason) => {
+			vscode.window.showErrorMessage(reason);
+		});
+    });
+    
+    //create a background color highlight for highlighting the css selection when clicking in the preview panel
+    let highlight = vscode.window.createTextEditorDecorationType({ backgroundColor: 'rgba(200,200,200,.35)' });
+
+    //when a user clicks in the preview panel highlight the css file
+    vscode.commands.registerCommand('extension.revealCssRule', (uri: vscode.Uri, propStart: number, propEnd: number) => {
+
+		for (let editor of vscode.window.visibleTextEditors) {
+			if (editor.document.uri.toString() === uri.toString()) {
+				let start = editor.document.positionAt(propStart);
+				let end = editor.document.positionAt(propEnd + 1);
+
+				editor.setDecorations(highlight, [new vscode.Range(start, end)]);
+				setTimeout(() => editor.setDecorations(highlight, []), 1500);
+			}
+		}
+	});
+    //end section
+
     setupSerializingActions(context);
     createTagMenu(context);
 
@@ -169,6 +217,9 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
+
+    // for html preview
+    context.subscriptions.push(htmlPreviewDisposable, registration);
 }
 
 //instantiate our class that serializes objects
