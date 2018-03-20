@@ -225,9 +225,7 @@ function createTagMenu(context:vscode.ExtensionContext) {
                         } else if (existingTags.includes(value)) {
                             //vscode.window.showErrorMessage('Tag already exists, code was not tagged');
                         } else {
-                            // new taginfo.name = input
-                            // TODO actually create taginfo and add code selection to the new tag
-                            let newTagInfo = new TagInfo(new Color(2), input);
+                            let newTagInfo = new TagInfo(new Color(2), value);
                             Singleton.getTagInfos().push(newTagInfo);
                             if (newTagInfo) {
                                 tagSelection(newTagInfo);
