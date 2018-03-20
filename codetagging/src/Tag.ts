@@ -32,9 +32,6 @@ export default class Tag {
                 // Both stdout and stderr are also set on the error object
                 return console.error(`Command failed with error code of #${err.status}`);
             }
-        
-            //console.log(stdout);
-            //console.log(stderr);
             //let regexp = new RegExp('/[\n\r]+/g');
             let cleanedOutput = stdout.toString().replace("\n", "");
             console.log(cleanedOutput);
