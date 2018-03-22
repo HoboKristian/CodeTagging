@@ -60,7 +60,6 @@ table.blueTable tfoot .links a{
 }
     </style>
 
-    <script type="text/javascript" src="tagData.json"></script>
 
 <script>
     //var rawData = /*$data*/;
@@ -68,6 +67,8 @@ table.blueTable tfoot .links a{
     var rawData = [{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(255,0,0,0.1)","highlight":"rgba(255,0,0,0.3)"},"name":"DB"},"timestamp":1521586985163,"file":"/index.js","start":4,"end":11},{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(0,255,0,0.1)","highlight":"rgba(0,255,0,0.3)"},"name":"API"},"timestamp":1521601462196,"file":"/index.js","start":2,"end":2}]
 
     var dataArrary = [];//this will hold the subset of info from the json that is relevant
+
+    var taginfoSet = new Set();
 
     function start() {
         createDataArray();
@@ -82,6 +83,9 @@ table.blueTable tfoot .links a{
             var tempArr = [];
             //add what we want to our temp array
             tempArr.push(obj.tagInfo.name);
+            //also add the taginfo.name to our taginfoSet so we have a unique list of taginfos which we'll use 
+            //to build our accordion element
+                taginfoSet.add(obj.tagInfo.name)
             tempArr.push(obj.file);
             tempArr.push(obj.author);
             var date = new Date(obj.timestamp);//convert the date from unix milliseconds
@@ -90,10 +94,14 @@ table.blueTable tfoot .links a{
             dataArrary.push(tempArr);
             
         }
+        taginfoSet.forEach(taginfo => {
+            console.log(`Tag: ${taginfo}!`);
+        });
+        
     }
 
     function populateTable(){
-        console.log(dataArrary);
+        //console.log(dataArrary);
         //get our table were adding rows to
         var table = document.getElementById("apps");
         var rowCount = table.rows.length;
@@ -254,6 +262,10 @@ table.blueTable tfoot .links a{
 </script>
 </head>
 <body>
+    <div id="accoridon">
+        test
+    </div>
+
     <div>
         <table id="apps" class="blueTable">
             <thead>
@@ -266,40 +278,6 @@ table.blueTable tfoot .links a{
             </thead>
         </table>
     </div>
-    <br>
-    <div>
-            <table>
-                    <thead>
-                            <tr>
-                                    <th>Fruits</th>
-                                    <th>Vitamin A</th>
-                                    <th>Vitamin C</th>
-                            </tr>
-                    </thead>
-            
-                    <tbody id="section1">
-                            <tr>
-                                    <th>Apples</th>
-                                    <td>98 ui</td>
-                                    <td>8.4 mg</td>
-                            </tr>
-                    </tbody>
-            
-                    <tbody id="section2">
-                            <tr>
-                                    <th>Oranges</th>
-                                    <td>295 ui</td>
-                                    <td>69.7 mg</td>
-                            </tr>
-                            <tr>
-                                    <th>Bananas</th>
-                                    <td>76 ui</td>
-                                    <td>10.3 mg</td>
-                            </tr>
-                    </tbody>
-            </table>
-    </div>
-
 </body>
 </html>
 </DOCTYPE>
