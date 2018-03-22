@@ -19,18 +19,13 @@ namespace Fold {
     }
 
     function methodContainsHighlightedTags(method:vscode.SymbolInformation, highlightedTags:Tag[]):boolean {
-        let methodStart = method.location.range.start.line;
-        let methodEnd = method.location.range.end.line;
-        
-        for (let tag of highlightedTags) {
-            console.log(methodStart, methodEnd);
-            if ((tag.start >= methodStart && tag.start <= methodEnd) ||
-            (tag.end >= methodStart && tag.end <= methodEnd)) {
-                return true;
-            }
+        const lineInMethod = (line:number, method:vscode.SymbolInformation) => {
+            let methodStart = method.location.range.start.line;
+            let methodEnd = method.location.range.end.line;
+            return (line >= methodStart && line <= methodEnd);
         }
-        return false;
-        //return highlightedTags.some(tag =>   
+        
+        return highlightedTags.some(tag => (lineInMethod(tag.start, method) || lineInMethod(tag.end, method)));
     }
 
     export async function unfoldFoldedMethods() {

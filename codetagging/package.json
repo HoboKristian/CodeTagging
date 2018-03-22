@@ -20,14 +20,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.serialize",
-                "title": "Serialize"
-            },
-            {
-                "command": "extension.load",
-                "title": "Load"
-            },
-            {
                 "command": "extension.tagMenu",
                 "title": "Tag selection"
             },
@@ -49,24 +41,6 @@
             ]
         },
         "keybindings": [
-            {
-                "command": "extension.tag1",
-                "key": "",
-                "mac": "cmd+shift+z 1",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.tag2",
-                "key": "",
-                "mac": "cmd+shift+z 2",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "extension.tag3",
-                "key": "",
-                "mac": "cmd+shift+z 3",
-                "when": "editorTextFocus"
-            },
             {
                 "command": "extension.tagMenu",
                 "key": "ctrl+shift+t",
