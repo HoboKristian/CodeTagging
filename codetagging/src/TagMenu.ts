@@ -75,11 +75,7 @@ export default class TagMenu {
         }
         if (this.tagIsolated) {
             this.tagIsolated = !this.tagIsolated;
-
-            this.hightlightedTagInfo = undefined;
-            Hiding.unhideFiles();
-            Fold.unfoldFoldedMethods();
-            this.redrawCallBack();
+            this.removeCurrentIsolation();
             //vscode.window.showInformationMessage('Isolation deactivated');
         } else {
             // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
@@ -94,13 +90,23 @@ export default class TagMenu {
             if (input.startsWith(this.highlightCurrentString)) {
                 input = input.replace(this.highlightCurrentString, "");
             }
-            this.tagIsolated = !this.tagIsolated;
             this.isolateTagInfoName(input);
             vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
         }
     }
 
+    private removeCurrentIsolation(){
+        this.hightlightedTagInfo = undefined;
+        Hiding.unhideFiles();
+        Fold.unfoldFoldedMethods();
+        this.redrawCallBack();
+    }
+
     isolateTagInfoName(tagInfoName:string) {
+        if (this.tagIsolated) {
+            this.removeCurrentIsolation();
+        }
+        this.tagIsolated = !this.tagIsolated;
         this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === tagInfoName);
         this.highlightTagInfo(this.hightlightedTagInfo);
         this.redrawCallBack();
