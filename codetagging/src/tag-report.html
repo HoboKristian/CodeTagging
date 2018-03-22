@@ -59,8 +59,6 @@ table.blueTable tfoot .links a{
   border-radius: 5px;
 }
     </style>
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <link rel="stylesheet" href="/resources/demos/style.css">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
@@ -72,6 +70,10 @@ table.blueTable tfoot .links a{
     var dataArrary = [];//this will hold the subset of info from the json that is relevant
 
     var taginfoSet = new Set();
+    //part of jquiery ui accordion
+    $( function() {
+        $( "#accordion2" ).accordion();
+    } );
     //part of jquiery ui accordion
     $( function() {
         $( "#accordion" ).accordion();
@@ -109,59 +111,127 @@ table.blueTable tfoot .links a{
     }
 
     function populateTable(){
+       //clear out any child nodes from the accordion div
+       var myNode = document.getElementById("accordion");
+        while (myNode.firstChild) {
+            myNode.removeChild(myNode.firstChild);
+        }
+       
         //first we will loop through all items in the taginfoSet and create an accordion item for them
         taginfoSet.forEach(taginfo => {
-            //get our div where we will put our accordion
-            var accordDiv = document.getElementById("accordion");
-            //add a new h3 element to it.
+
+            //var newDiv = `<h3>Q2 New Question</h3><div>looping through taginfos: + ${taginfo}</div>`;
             var h3 = document.createElement("h3");
-            h3.innerHTML = taginfo;
-            accordDiv.appendChild(h3);
+            //h3.innerHTML = 'Tage Type: ' + taginfo;
+            var a = document.createElement('a');
+            a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(taginfo)));
+            a.innerHTML = taginfo;
+            h3.appendChild(a);
+            $('#accordion').append(h3);
+            var div = document.createElement("div");
+            div.setAttribute('id', taginfo);
+            //create tables with id's set to the current taginfo
+            var table = document.createElement("table");
+            table.setAttribute('id', taginfo+'subTable');
+            table.setAttribute('class', "blueTable");
+            div.appendChild(table);
+            $('#accordion').append(div);
+
+            // //get our div where we will put our accordion
+            // var accordDiv = document.getElementById("accordion");
+            // //add a new h3 element to it.
+            // var h3 = document.createElement("h3");
+            // h3.innerHTML = 'Section: ' + taginfo;
+            // accordDiv.append(h3);
+            // //create a new div with an id of the current taginfo and in here we will popualate the files associated with that tainfo
+            // var div = document.createElement("div");
+            // div.setAttribute('id', taginfo);
+            // //create a new paragraph to be the contents of that div
+            // var p = document.createElement("p");
+            // p.innerHTML = "sample text";
+            // div.appendChild(p);
+            // //now add the combinded div and p to the accoridion 
+            // accordDiv.append(div)
+            
+            //var p = document.createElement("p");
+            //p.innerHTML = 'testing inner html of div type: ' + taginfo;
+            
+
             //get our table were adding rows to
-            var table = document.getElementById("apps");
+            var table = document.getElementById(taginfo+'subTable');
             var rowCount = table.rows.length;
             //clear our any existing rows excecpt the header row
             for (var i = rowCount - 1; i > 0; i--) {
                 table.deleteRow(i);
             }
+            //keep track of if we made a headers row already 
+            var isHeader = false;
             for (var i = 0; i < dataArrary.length; i++) {
                 //get current tag object in the json of tags
                 var obj = dataArrary[i];
-                //row for this record
-                var tr = document.createElement("tr");
-                //get and each tag type from each tag object
-                var td = document.createElement("td");
-                var a = document.createElement('a');
-                a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(obj[0])));
-                a.innerHTML = obj[0];
-                td.appendChild(a);
-                tr.appendChild(td);
-                table.appendChild(tr);
-                //get and each tag path
-                var td = document.createElement("td");
-                var a = document.createElement('a');
-                a.setAttribute('href','command:extension.revealTaggedFile?'+ encodeURIComponent(JSON.stringify(obj[1])));
-                a.innerHTML = obj[1];
-                td.appendChild(a);
-                tr.appendChild(td);
-                table.appendChild(tr);
-                //get and each tag author
-                var td = document.createElement("td");
-                var txt = document.createTextNode(obj[2]);
-                td.appendChild(txt);
-                tr.appendChild(td);
-                table.appendChild(tr);
-                //get and each tag creation date
-                var date = new Date(obj[3]);//convert the date from unix milliseconds
-                var td = document.createElement("td");
-                var txt = document.createTextNode(date.toDateString());
-                td.appendChild(txt);
-                tr.appendChild(td);
-                table.appendChild(tr);
-
+                if(obj[0] === taginfo){ // if this record is of the same taginfo as we are currently lopping through make table row entries for it
+                    //only create header if this is the first record
+                    if (isHeader === false){
+                        console.log("is header happened");
+                        var thead = document.createElement("thead");
+                        var tr = document.createElement("tr");
+                        //tbl header for filename
+                        var th = document.createElement("th");
+                        th.innerHTML = 'File Name';
+                        tr.appendChild(th);
+                        //tbl header for author
+                        var th = document.createElement("th");
+                        th.innerHTML = 'Author';
+                        tr.appendChild(th);
+                        //tbl header for filename
+                        var th = document.createElement("th");
+                        th.innerHTML = 'Date Created';
+                        tr.appendChild(th);
+                        //add the headers to the tr and thead
+                        thead.appendChild(tr);
+                        table.append(thead); 
+                       //now that we ran this code once, make sure we don't run it again
+                        isHeader = true;
+                    }
+                    //row for this record
+                    var tr = document.createElement("tr");
+                    //get and each tag type from each tag object
+                    // var td = document.createElement("td");
+                    // var a = document.createElement('a');
+                    // a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(obj[0])));
+                    // a.innerHTML = obj[0];
+                    // td.appendChild(a);
+                    // tr.appendChild(td);
+                    // table.appendChild(tr);
+                    //get and each tag path
+                    var td = document.createElement("td");
+                    var a = document.createElement('a');
+                    a.setAttribute('href','command:extension.revealTaggedFile?'+ encodeURIComponent(JSON.stringify(obj[1])));
+                    a.innerHTML = obj[1];
+                    td.appendChild(a);
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                    //get and each tag author
+                    var td = document.createElement("td");
+                    var txt = document.createTextNode(obj[2]);
+                    td.appendChild(txt);
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                    //get and each tag creation date
+                    var date = new Date(obj[3]);//convert the date from unix milliseconds
+                    var td = document.createElement("td");
+                    var txt = document.createTextNode(date.toDateString());
+                    td.appendChild(txt);
+                    tr.appendChild(td);
+                    table.appendChild(tr);
+                }
             }
 
-        })
+        });
+        //accordDiv.accordion("refresh");
+        //$( "#accordion" ).accordion();
+        //run this to make sure the accordion works with new added panels
+        $('#accordion').accordion("refresh");
 
     }
 
@@ -281,11 +351,11 @@ table.blueTable tfoot .links a{
 </script>
 </head>
 <body>
+
     <div id="accordion">
-        test
     </div>
 
-    <div>
+    <!-- <div>
         <table id="apps" class="blueTable">
             <thead>
                 <tr>
@@ -296,7 +366,9 @@ table.blueTable tfoot .links a{
             </tr>
             </thead>
         </table>
-    </div>
+    </div> -->
+
+
 </body>
 </html>
 </DOCTYPE>
