@@ -125,20 +125,14 @@ export function activate(context: vscode.ExtensionContext) {
     let provider = new TextDocumentContentProvider();
     //register a provider giving our provider class and a name 
     let registration = vscode.workspace.registerTextDocumentContentProvider('tag-preview', provider);
-    //watches if the file changes at the workspace level
-    vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
-		if (e.document === vscode.window.activeTextEditor.document) {
+    //whenever a new tab(editor) is swtiched to update the 
+    vscode.window.onDidChangeActiveTextEditor((e: vscode.TextEditor|undefined) => {
+		//if (e.document === vscode.window.activeTextEditor.document) {
 			provider.update(previewUri);
-		}
+		//}
 	});
-    //watches if text editor selection changed in the open editor
-	vscode.window.onDidChangeTextEditorSelection((e: vscode.TextEditorSelectionChangeEvent) => {
-		if (e.textEditor === vscode.window.activeTextEditor) {
-			provider.update(previewUri);
-		}
-    });
     
-    //create our disposable
+    //create our disposable//change the 2 column thing here
     let htmlPreviewDisposable = vscode.commands.registerCommand('extension.showTagPreview', () => {
 		return vscode.commands.executeCommand('vscode.previewHtml', previewUri, vscode.ViewColumn.Two, 'Tag Visualization').then((success) => {
 		}, (reason) => {
@@ -146,22 +140,24 @@ export function activate(context: vscode.ExtensionContext) {
 		});
     });
     
-    //create a background color highlight for highlighting the css selection when clicking in the preview panel
-    let highlight = vscode.window.createTextEditorDecorationType({ backgroundColor: 'rgba(200,200,200,.35)' });
+    //when a user clicks a file link in the visulizatoin open the file in a new tab in the editor
+    vscode.commands.registerCommand('extension.revealTaggedFile', (fileName: string) => {
+        //get workspace url
+        let  workspacePath = vscode.workspace.rootPath;
+        //create uri object for a local file
+        let path = vscode.Uri.file(workspacePath +fileName);
+  
+        vscode.workspace.openTextDocument(path).then(document => {
+            return vscode.window.showTextDocument(document);
+        });
+    });
+    
+    //when a user clicks a tag type link in the html preview have it filter the ui 
+    vscode.commands.registerCommand('extension.modifyUiForTag', (tageType: string) => {
+        console.log("run given command for: " + tageType);
+        
+    });
 
-    //when a user clicks in the preview panel highlight the css file
-    vscode.commands.registerCommand('extension.revealCssRule', (uri: vscode.Uri, propStart: number, propEnd: number) => {
-
-		for (let editor of vscode.window.visibleTextEditors) {
-			if (editor.document.uri.toString() === uri.toString()) {
-				let start = editor.document.positionAt(propStart);
-				let end = editor.document.positionAt(propEnd + 1);
-
-				editor.setDecorations(highlight, [new vscode.Range(start, end)]);
-				setTimeout(() => editor.setDecorations(highlight, []), 1500);
-			}
-		}
-	});
     //end section
 
     setupSerializingActions(context);

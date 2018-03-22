@@ -1,0 +1,305 @@
+<DOCTYPE! html>
+<head>
+    <style>
+table.blueTable {
+  font-family: Verdana, Geneva, sans-serif;
+  border: 1px solid #1C6EA4;
+  background-color: #EEEEEE;
+  width: 100%;
+  text-align: left;
+}
+table.blueTable td, table.blueTable th {
+  border: 1px solid #AAAAAA;
+  padding: 1px 1px;
+}
+table.blueTable tbody td {
+  font-size: 13px;
+}
+table.blueTable tr:nth-child(even) {
+  background: #D0E4F5;
+}
+table.blueTable thead {
+  background: #1C6EA4;
+  background: -moz-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  background: -webkit-linear-gradient(top, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  border-bottom: 2px solid #444444;
+}
+table.blueTable thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border-left: 2px solid #D0E4F5;
+}
+table.blueTable thead th:first-child {
+  border-left: none;
+}
+
+table.blueTable tfoot {
+  font-size: 14px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #D0E4F5;
+  background: -moz-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  background: -webkit-linear-gradient(top, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  background: linear-gradient(to bottom, #dcebf7 0%, #d4e6f6 66%, #D0E4F5 100%);
+  border-top: 2px solid #444444;
+}
+table.blueTable tfoot td {
+  font-size: 14px;
+}
+table.blueTable tfoot .links {
+  text-align: right;
+}
+table.blueTable tfoot .links a{
+  display: inline-block;
+  background: #1C6EA4;
+  color: #FFFFFF;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+    </style>
+
+    <script type="text/javascript" src="tagData.json"></script>
+
+<script>
+    //var rawData = /*$data*/;
+    
+    var rawData = [{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(255,0,0,0.1)","highlight":"rgba(255,0,0,0.3)"},"name":"DB"},"timestamp":1521586985163,"file":"/index.js","start":4,"end":11},{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(0,255,0,0.1)","highlight":"rgba(0,255,0,0.3)"},"name":"API"},"timestamp":1521601462196,"file":"/index.js","start":2,"end":2}]
+
+    var dataArrary = [];//this will hold the subset of info from the json that is relevant
+
+    function start() {
+        createDataArray();
+        populateTable();
+    }
+
+    function createDataArray(){
+        for (var i = 0; i < rawData.length; i++) {
+            //get current tag object in the json of tags
+            var obj = rawData[i];
+            //temp array to hold this row of data
+            var tempArr = [];
+            //add what we want to our temp array
+            tempArr.push(obj.tagInfo.name);
+            tempArr.push(obj.file);
+            tempArr.push(obj.author);
+            var date = new Date(obj.timestamp);//convert the date from unix milliseconds
+            tempArr.push(date);
+            //add our sub array to our master data array
+            dataArrary.push(tempArr);
+            
+        }
+    }
+
+    function populateTable(){
+        console.log(dataArrary);
+        //get our table were adding rows to
+        var table = document.getElementById("apps");
+        var rowCount = table.rows.length;
+        for (var i = rowCount - 1; i > 0; i--) {
+            table.deleteRow(i);
+        }
+        for (var i = 0; i < dataArrary.length; i++) {
+            //get current tag object in the json of tags
+            var obj = dataArrary[i];
+            //row for this record
+            var tr = document.createElement("tr");
+            //get and each tag type from each tag object
+            var td = document.createElement("td");
+            var a = document.createElement('a');
+            a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(obj[0])));
+            a.innerHTML = obj[0];
+            td.appendChild(a);
+            tr.appendChild(td);
+            table.appendChild(tr);
+            //get and each tag path
+            var td = document.createElement("td");
+            var a = document.createElement('a');
+            a.setAttribute('href','command:extension.revealTaggedFile?'+ encodeURIComponent(JSON.stringify(obj[1])));
+            a.innerHTML = obj[1];
+            td.appendChild(a);
+            tr.appendChild(td);
+            table.appendChild(tr);
+            //get and each tag author
+            var td = document.createElement("td");
+            var txt = document.createTextNode(obj[2]);
+            td.appendChild(txt);
+            tr.appendChild(td);
+            table.appendChild(tr);
+            //get and each tag creation date
+            var date = new Date(obj[3]);//convert the date from unix milliseconds
+            var td = document.createElement("td");
+            var txt = document.createTextNode(date.toDateString());
+            td.appendChild(txt);
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+        }
+    }
+
+    function resort(key, dir) {
+        if (key === 'type' && dir === 'asc') {
+            console.log(key + dir);
+            dataArrary.sort(sortTypeAsc);
+            populateTable();
+        }
+        if (key === 'type' && dir === 'desc') {
+            console.log(key + dir);
+            dataArrary.sort(sortTypeDsc);
+            populateTable();
+        }
+        if (key === 'file' && dir === 'asc') {
+            console.log(key + dir);
+            dataArrary.sort(sortFileAsc);
+            populateTable();
+        }
+        if (key === 'file' && dir === 'desc') {
+            console.log(key + dir);
+            dataArrary.sort(sortFileDsc);
+            populateTable();
+        }
+        if (key === 'author' && dir === 'asc') {
+            console.log(key + dir);
+            dataArrary.sort(sortAuthorAsc);
+            populateTable();
+        }
+        if (key === 'author' && dir === 'desc') {
+            console.log(key + dir);
+            dataArrary.sort(sortAuthorDsc);
+            populateTable();
+        }
+        if (key === 'date' && dir === 'asc') {
+            console.log(key + dir);
+            dataArrary.sort(sortDateAsc);
+            populateTable();
+        }
+        if (key === 'date' && dir === 'desc') {
+            console.log(key + dir);
+            dataArrary.sort(sortDateDsc);
+            populateTable();
+        }
+    }
+    // sort tage type
+    function sortTypeAsc(a, b) {
+        if (a[0] === b[0]) {
+            return 0;
+        }
+        else {
+            return (a[0] > b[0]) ? -1 : 1;
+        }
+    }
+    function sortTypeDsc(a, b) {
+        if (a[0] === b[0]) {
+            return 0;
+        }
+        else {
+            return (a[0] < b[0]) ? -1 : 1;
+        }
+    }
+    // sort by file name
+    function sortFileAsc(a, b) {
+        if (a[1] === b[1]) {
+            return 0;
+        }
+        else {
+            return (a[1] > b[1]) ? -1 : 1;
+        }
+    }
+    function sortFileDsc(a, b) {
+        if (a[1] === b[1]) {
+            return 0;
+        }
+        else {
+            return (a[1] < b[1]) ? -1 : 1;
+        }
+    }
+    // sort by author name
+    function sortAuthorAsc(a, b) {
+        if (a[2] === b[2]) {
+            return 0;
+        }
+        else {
+            return (a[2] > b[2]) ? -1 : 1;
+        }
+    }
+    function sortAuthorDsc(a, b) {
+        if (a[2] === b[2]) {
+            return 0;
+        }
+        else {
+            return (a[2] < b[2]) ? -1 : 1;
+        }
+    }
+    // sort by ceated date
+    function sortDateAsc(a, b) {
+        if (a[3] === b[3]) {
+            return 0;
+        }
+        else {
+            return (a[3] > b[3]) ? -1 : 1;
+        }
+    }
+    function sortDateDsc(a, b) {
+        if (a[3] === b[3]) {
+            return 0;
+        }
+        else {
+            return (a[3] < b[3]) ? -1 : 1;
+        }
+    }
+
+    window.onload = start;
+    populateTable();
+</script>
+</head>
+<body>
+    <div>
+        <table id="apps" class="blueTable">
+            <thead>
+                <tr>
+                <th>Tag Type&nbsp;&nbsp;<span class="button" onclick="javascript:resort('type','asc');">&#x25B2;</span><span class="button" onclick="javascript:resort('type','desc');">&#x25BC;</span></th>
+                <th>File Name&nbsp;&nbsp;<span class="button" onclick="javascript:resort('file','asc');">&#x25B2;</span><span class="button" onclick="javascript:resort('file','desc');">&#x25BC;</span></th>
+                <th>Author&nbsp;&nbsp;<span class="button" onclick="javascript:resort('author','asc');">&#x25B2;</span><span class="button" onclick="javascript:resort('author','desc');">&#x25BC;</span></th>
+                <th>Date Created&nbsp;&nbsp;<span class="button" onclick="javascript:resort('date','asc');">&#x25B2;</span><span class="button" onclick="javascript:resort('date','desc');">&#x25BC;</span></th>                
+            </tr>
+            </thead>
+        </table>
+    </div>
+    <br>
+    <div>
+            <table>
+                    <thead>
+                            <tr>
+                                    <th>Fruits</th>
+                                    <th>Vitamin A</th>
+                                    <th>Vitamin C</th>
+                            </tr>
+                    </thead>
+            
+                    <tbody id="section1">
+                            <tr>
+                                    <th>Apples</th>
+                                    <td>98 ui</td>
+                                    <td>8.4 mg</td>
+                            </tr>
+                    </tbody>
+            
+                    <tbody id="section2">
+                            <tr>
+                                    <th>Oranges</th>
+                                    <td>295 ui</td>
+                                    <td>69.7 mg</td>
+                            </tr>
+                            <tr>
+                                    <th>Bananas</th>
+                                    <td>76 ui</td>
+                                    <td>10.3 mg</td>
+                            </tr>
+                    </tbody>
+            </table>
+    </div>
+
+</body>
+</html>
+</DOCTYPE>

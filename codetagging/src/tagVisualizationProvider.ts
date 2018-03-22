@@ -1,5 +1,5 @@
 'use strict';
-
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 //import * as fs from 'fs';
 //improt the singleton which we use for reading the values of our tags in order to visualize them in the html preview
@@ -9,6 +9,13 @@ import Singleton from './Singleton';
 export class TextDocumentContentProvider implements vscode.TextDocumentContentProvider {
     
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
+
+    private static COVERAGE_REPORT_TEMPLATE: string = fs.readFileSync(vscode.workspace.rootPath +'/tag-report.html').toString();
+    // public static init(ctx: vscode.ExtensionContext): void {
+    //     console.log("ran pre");
+    //     this.COVERAGE_REPORT_TEMPLATE = fs.readFileSync(ctx.asAbsolutePath('./tag-report.html')).toString();
+    //     console.log("ran post");
+	// }
 
     //returns the content that will be in the preview panel (when is this called?) i think it's part of what
     //is inherited from this classes parent
@@ -47,16 +54,19 @@ export class TextDocumentContentProvider implements vscode.TextDocumentContentPr
 
     // method to return a snippet of html to preview
     private snippet(): string {
-        const tags = Singleton.getTags();
-        console.log(tags);
-        let tagString = '';
-        for(let i=0; i<tags.length; i++) {
-            tagString = tagString.concat(" "+tags[i].author); 
-        }
-        return `
-        <body>
-            ${tagString}
-        </body>`;
+        //const tags = Singleton.getTags();
+        //
+        let tagString = JSON.stringify(Singleton.getTags());
+        console.log(Singleton.getTags());
+        console.log(tagString);
+        //console.log(TextDocumentContentProvider.COVERAGE_REPORT_TEMPLATE)
+        // for(let i=0; i<tags.length; i++) {
+        //     tagString = tagString.concat(" "+tags[i].author); 
+        // }
+        return (
+			TextDocumentContentProvider.COVERAGE_REPORT_TEMPLATE.replace(/\/\*\$data\*\//, tagString)
+		);
     }
 
 }
+
