@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     codeChangeListener = new CodeChangeListener(context, redraw);
     textDocumentChanged = new TextDocumentChanged(context, redraw);
-    tagMenu = new TagMenu();
+    tagMenu = new TagMenu(redraw, tagSelection);
 
     for (let i = 1; i <= 100; i += 3) {
         let ti = Singleton.createNewTagInfo(String.fromCharCode(i));
@@ -117,8 +117,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
 
-    context.subscriptions.push(vscode.commands.registerCommand('extension.tagMenu', () => tagMenu.getTagMenu()));
-    context.subscriptions.push(vscode.commands.registerCommand('extension.tagIsolate', () => tagMenu.getIsolateMenu()));
+    context.subscriptions.push(vscode.commands.registerCommand('extension.tagMenu', () => tagMenu.showTagMenu()));
+    context.subscriptions.push(vscode.commands.registerCommand('extension.tagIsolate', () => tagMenu.showIsolateMenu()));
 }
 
 //instantiate our class that serializes objects
