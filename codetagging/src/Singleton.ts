@@ -1,13 +1,35 @@
+import * as vscode from 'vscode';
 import Color from './Color';
 import TagInfo from './TagInfo';
 import Tag from './Tag';
+import { GenerateSerialization } from './generateSerialization';
+import { LoadSerialization } from './LoadSerialization';
 
 export default class Singleton
 {
     private static _instance: Singleton;
     private tagInfos: TagInfo[] = [];
     private tags: Tag[] = [];
+    private mySerializer:GenerateSerialization|undefined;
+    private myLoader:LoadSerialization|undefined;
     private constructor() {
+        let workspaceRootPath = vscode.workspace.rootPath;
+        if (workspaceRootPath) {
+            this.myLoader = new LoadSerialization(workspaceRootPath);
+            this.mySerializer = new GenerateSerialization(vscode.Uri.parse(workspaceRootPath));
+        }
+    }
+
+    private static serialize() {
+        if (singleton.mySerializer) {
+            singleton.mySerializer.serialize();
+        }
+    }
+
+    public static load() {
+        if (singleton.myLoader) {
+            singleton.myLoader.readFile();
+        } 
     }
 
     public static getTags() {
@@ -20,6 +42,7 @@ export default class Singleton
 
     public static addTag(tag:Tag) {
         singleton.tags.push(tag);
+        Singleton.serialize();
     }
 
     public static getTagInfos() {

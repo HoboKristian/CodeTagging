@@ -6,8 +6,6 @@ import CodeChangeListener from './CodeChangeListener';
 import Singleton from './Singleton';
 import Tag from './Tag';
 import TagInfo from './TagInfo';
-import { GenerateSerialization } from './generateSerialization';
-import { LoadSerialization } from "./loadSerialization";
 import TextDocumentChanged from './FileChangeListener';
 import TagMenu from './TagMenu';
 
@@ -90,7 +88,6 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "codetagging" is now active!');
 
-    setupSerializingActions(context);
     createTagMenu(context);
 
     let disposable = vscode.commands.registerCommand('extension.tag1', () => {
@@ -107,8 +104,8 @@ export function activate(context: vscode.ExtensionContext) {
     textDocumentChanged = new TextDocumentChanged(context, redraw);
     tagMenu = new TagMenu(redraw, tagSelection);
 
-    for (let i = 1; i <= 100; i += 3) {
-        let ti = Singleton.createNewTagInfo(String.fromCharCode(i));
+    for (let i = 1; i <= 2; i += 3) {
+        let ti = Singleton.createNewTagInfo("" + i);
         tagLines(ti, i, i+2);
     }
 
@@ -119,30 +116,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('extension.tagMenu', () => tagMenu.showTagMenu()));
     context.subscriptions.push(vscode.commands.registerCommand('extension.tagIsolate', () => tagMenu.showIsolateMenu()));
-}
 
-//instantiate our class that serializes objects
-//we pass it the location of the where we want to save the file
-//this is showing as an error but it works, something about string | undefined cant be assigned to string
-function setupSerializingActions(context:vscode.ExtensionContext) {
-    if (vscode.workspace.rootPath) {
-        let mySerializer = new GenerateSerialization(vscode.Uri.parse(vscode.workspace.rootPath));
-        //command to save taging to disk
-        let saveToDisk = vscode.commands.registerCommand('extension.serialize', () => {
-            //call the serialize method passing it the json of serialized tag objects to write to file
-            mySerializer.serialize();
-        });
-        context.subscriptions.push(saveToDisk);
-
-        let myLoader = new LoadSerialization(vscode.workspace.rootPath);
-
-        let loadFromFile = vscode.commands.registerCommand('extension.load', () => {
-            //call the serialize method passing it the json of serialized tag objects to write to file
-            myLoader.readFile();
-            redraw();
-        });
-        context.subscriptions.push(loadFromFile);
-    }
+    Singleton.load();
 }
 
 // The command has been defined in the package.json file
