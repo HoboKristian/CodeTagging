@@ -121,8 +121,8 @@ export function activate(context: vscode.ExtensionContext) {
     });
     
     //when a user clicks a tag type link in the html preview have it filter the ui 
-    vscode.commands.registerCommand('extension.modifyUiForTag', (tageType: string) => {
-        console.log("run given command for: " + tageType);
+    vscode.commands.registerCommand('extension.modifyUiForTag', (tagInfoName: string) => {
+        console.log("run given command for: " + tagMenu.isolateTagInfoName(tagInfoName));
         
     });
 
