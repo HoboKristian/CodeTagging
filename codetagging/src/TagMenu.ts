@@ -95,12 +95,15 @@ export default class TagMenu {
                 input = input.replace(this.highlightCurrentString, "");
             }
             this.tagIsolated = !this.tagIsolated;
-
-            this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
-            this.highlightTagInfo(this.hightlightedTagInfo);
-            this.redrawCallBack();
+            this.isolateTagInfoName(input);
             vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
         }
+    }
+
+    isolateTagInfoName(tagInfoName:string) {
+        this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === tagInfoName);
+        this.highlightTagInfo(this.hightlightedTagInfo);
+        this.redrawCallBack();
     }
 
     private highlightTagInfo(highlightedTagInfo:TagInfo|undefined) {
