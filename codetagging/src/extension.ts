@@ -19,10 +19,6 @@ function relativeFilePathForDocument(document:vscode.TextDocument):string {
     return (ws) ? fileName.replace(ws.uri.fsPath, '') : fileName;
 }
 
-function tagIndex(tagIndex: number) {
-    tagSelection(Singleton.getTagInfos()[tagIndex]);
-}
-
 function tagSelection(tagInfo: TagInfo) {
     let textEditor = vscode.window.activeTextEditor;
     if (textEditor === undefined) {
@@ -90,16 +86,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     createTagMenu(context);
 
-    let disposable = vscode.commands.registerCommand('extension.tag1', () => {
-        tagIndex(0);
-    });
-    let disposable2 = vscode.commands.registerCommand('extension.tag2', () => {
-        tagIndex(1);
-    });
-    let disposable3 = vscode.commands.registerCommand('extension.tag3', () => {
-        tagIndex(2);
-    });
-
     codeChangeListener = new CodeChangeListener(context, redraw);
     textDocumentChanged = new TextDocumentChanged(context, redraw);
     tagMenu = new TagMenu(redraw, tagSelection);
@@ -110,10 +96,6 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // subscribe to selection change and editor activation events
-    context.subscriptions.push(disposable);
-    context.subscriptions.push(disposable2);
-    context.subscriptions.push(disposable3);
-
     context.subscriptions.push(vscode.commands.registerCommand('extension.tagMenu', () => tagMenu.showTagMenu()));
     context.subscriptions.push(vscode.commands.registerCommand('extension.tagIsolate', () => tagMenu.showIsolateMenu()));
 
