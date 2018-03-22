@@ -36,9 +36,11 @@ export default class TagMenu {
             vscode.window.showErrorMessage('No tag was selected, code was not tagged');
             return;
         }
+        console.log(input);
         if (input === this.createNewTagString) {
             // open InputBox to create a new tag
             let value = await vscode.window.showInputBox({prompt: 'Enter new tag name'});
+            console.log(value);
             // executes when user presses Enter
             // if no tag name is entered, no tag is created
             // if the entered tag name already exists, no tag is created
@@ -61,15 +63,14 @@ export default class TagMenu {
         // key: ctrl/cmd + shift + R
         // Command for isolating a specified tag
         let existingTags = Singleton.getTagInfos().map(tagInfo => tagInfo.name);
+        let existingTagsWithCurrentLine = existingTags.slice(0, existingTags.length);
         let textEditor = vscode.window.activeTextEditor;
-        let currentTagInfo:TagInfo|undefined = undefined;
         if (textEditor) {
             let currentLine = textEditor.selection.start.line;
             let currentTag = Singleton.getTags()
             .find(tag => tag.start <= currentLine && tag.end >= currentLine);
             if (currentTag) {
-                currentTagInfo = currentTag.tagInfo;
-                existingTags.unshift(this.highlightCurrentString + currentTagInfo.name);
+                existingTagsWithCurrentLine.unshift(this.highlightCurrentString + currentTag.tagInfo.name);
             }
         }
         if (this.tagIsolated) {
@@ -82,7 +83,7 @@ export default class TagMenu {
             //vscode.window.showInformationMessage('Isolation deactivated');
         } else {
             // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
-            let input = await vscode.window.showQuickPick(existingTags);
+            let input = await vscode.window.showQuickPick(existingTagsWithCurrentLine);
             // executes when user presses Enter or selects a suggested tag name
             // if no tag name is entered or the tag name is not an existing tag, no tag is isolated
             // if an existing tag is entered or selected, isolate that tag
@@ -90,21 +91,15 @@ export default class TagMenu {
                 vscode.window.showErrorMessage('No tag was isolated');
                 return;
             }
-            if (existingTags.includes(input)) {
-                this.tagIsolated = !this.tagIsolated;
+            if (input.startsWith(this.highlightCurrentString)) {
+                input = input.replace(this.highlightCurrentString, "");
+            }
+            this.tagIsolated = !this.tagIsolated;
 
-                this.hightlightedTagInfo = this.updateHighligthedTagInfo(input, currentTagInfo);
-                this.highlightTagInfo(this.hightlightedTagInfo);
-                this.redrawCallBack();
-                vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
-            }   
-        }
-    }
-    private updateHighligthedTagInfo(input:string, currentLineTagInfo:TagInfo|undefined):TagInfo|undefined {
-        if (input.startsWith(this.highlightCurrentString) && currentLineTagInfo !== undefined) {
-            return currentLineTagInfo;
-        } else {
-            return Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+            this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === input);
+            this.highlightTagInfo(this.hightlightedTagInfo);
+            this.redrawCallBack();
+            vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
         }
     }
 
