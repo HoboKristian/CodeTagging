@@ -52,6 +52,12 @@
                 "key": "ctrl+shift+r",
                 "mac": "cmd+shift+r",
                 "when": "editorFocus"
+            },
+            {
+                "command": "extension.showTagPreview",
+                "key": "ctrl+shift+z",
+                "mac": "cmd+shift+z",
+                "when": "editorFocus"
             }
         ]
     },

@@ -63,9 +63,9 @@ table.blueTable tfoot .links a{
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <script>
-    var rawData = /*$data*/;
+    //var rawData = /*$data*/;
     
-    //var rawData = [{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(255,0,0,0.1)","highlight":"rgba(255,0,0,0.3)"},"name":"DB"},"timestamp":1521586985163,"file":"/index.js","start":4,"end":11},{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(0,255,0,0.1)","highlight":"rgba(0,255,0,0.3)"},"name":"API"},"timestamp":1521601462196,"file":"/index.js","start":2,"end":2}]
+    var rawData = [{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(255,0,0,0.1)","highlight":"rgba(255,0,0,0.3)"},"name":"DB"},"timestamp":1521586985163,"file":"/index.js","start":4,"end":11},{"author":"Patrick Boutet","tagInfo":{"color":{"color":"rgba(0,255,0,0.1)","highlight":"rgba(0,255,0,0.3)"},"name":"API"},"timestamp":1521601462196,"file":"/index.js","start":2,"end":2}]
 
     var dataArrary = [];//this will hold the subset of info from the json that is relevant
 
@@ -124,12 +124,19 @@ table.blueTable tfoot .links a{
             var h3 = document.createElement("h3");
             //h3.innerHTML = 'Tage Type: ' + taginfo;
             var a = document.createElement('a');
-            a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(taginfo)));
+            //a.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(taginfo)));
             a.innerHTML = taginfo;
             h3.appendChild(a);
             $('#accordion').append(h3);
             var div = document.createElement("div");
             div.setAttribute('id', taginfo);
+
+            //create a link to isolate workspace on given taginfo
+            var aisolate = document.createElement('a');
+            aisolate.setAttribute('href','command:extension.modifyUiForTag?'+ encodeURIComponent(JSON.stringify(taginfo)));
+            aisolate.innerHTML = 'Isolate workspace for ' + taginfo +' tag';
+            div.appendChild(aisolate);
+
             //create tables with id's set to the current taginfo
             var table = document.createElement("table");
             table.setAttribute('id', taginfo+'subTable');
