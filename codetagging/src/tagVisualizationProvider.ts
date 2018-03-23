@@ -10,7 +10,7 @@ export class TextDocumentContentProvider implements vscode.TextDocumentContentPr
     
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
 
-    private static COVERAGE_REPORT_TEMPLATE: string = "";//fs.readFileSync(vscode.workspace.rootPath +'/tag-report.html').toString();
+    private static COVERAGE_REPORT_TEMPLATE: string = fs.readFileSync(vscode.workspace.rootPath +'/tag-report.html').toString();
     // public static init(ctx: vscode.ExtensionContext): void {
     //     console.log("ran pre");
     //     this.COVERAGE_REPORT_TEMPLATE = fs.readFileSync(ctx.asAbsolutePath('./tag-report.html')).toString();

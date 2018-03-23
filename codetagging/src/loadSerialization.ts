@@ -49,6 +49,10 @@ export class LoadSerialization{
         this.tags = deserialize<Tag[]>(Tag, tagObj);
         //console.log('priniting array of tag objects after desierializaing');
         //console.log(this.tags);
+
+        this.tagInfos.forEach( (element) => {
+            Singleton.createNewTagInfo(element.name);
+        });
         
         //Merge the two arrays of objects into the singleton class
         //get the instance of the singleton
