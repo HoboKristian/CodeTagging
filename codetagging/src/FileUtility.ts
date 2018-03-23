@@ -18,23 +18,18 @@ namespace FileUtility {
     }
 
     export function filesThatDoNotContainTagInfo(tagInfo:TagInfo):string[]|undefined {
-        let textEditor = vscode.window.activeTextEditor;
-        if (textEditor) {
-            let ws = vscode.workspace.workspaceFolders;
-            if (ws) {
-                const tagPaths = Singleton.getTags()
-                .filter(tag => tag.tagInfo === tagInfo)
-                .map(tag => tag.file);
+        let ws = vscode.workspace.workspaceFolders;
+        if (ws) {
+            const tagPaths = Singleton.getTags()
+            .filter(tag => tag.tagInfo === tagInfo)
+            .map(tag => tag.file);
 
-                console.log(tagPaths);
-
-                return ws
-                .map(workspace => workspace.uri.fsPath)
-                .map(folder => walkSync(folder)
-                            .map(e => e.replace(folder, ''))
-                            .filter(f => !tagPaths.includes(f)))
-                .reduce((a, b) => a.concat(b), []);
-            }
+            return ws
+            .map(workspace => workspace.uri.fsPath)
+            .map(folder => walkSync(folder)
+                        .map(e => e.replace(folder, ''))
+                        .filter(f => !tagPaths.includes(f)))
+            .reduce((a, b) => a.concat(b), []);
         }
     }
 

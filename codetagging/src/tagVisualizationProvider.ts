@@ -57,8 +57,8 @@ export class TextDocumentContentProvider implements vscode.TextDocumentContentPr
         //const tags = Singleton.getTags();
         //
         let tagString = JSON.stringify(Singleton.getTags());
-        console.log(Singleton.getTags());
-        console.log(tagString);
+        //console.log(Singleton.getTags());
+        //console.log(tagString);
         //console.log(TextDocumentContentProvider.COVERAGE_REPORT_TEMPLATE)
         // for(let i=0; i<tags.length; i++) {
         //     tagString = tagString.concat(" "+tags[i].author); 

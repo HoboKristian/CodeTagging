@@ -60,19 +60,20 @@ function tagLines(tagInfo:TagInfo, from: number, to: number) {
 
 let activeDecorations: vscode.TextEditorDecorationType[] = [];
 
-function redraw() {
+async function redraw() {
     activeDecorations.forEach(dec => dec.dispose());
     activeDecorations = [];
 
-    let textEditor = vscode.window.activeTextEditor;
-    if (textEditor) {
-        let editor = textEditor; // For some reason not doing this gives might be undefined error
-        let fileName = relativeFilePathForDocument(textEditor.document);
+    for (let textEditor of vscode.window.visibleTextEditors) {
+        let document = await vscode.workspace.openTextDocument(textEditor.document.uri);
+        await vscode.window.showTextDocument(document);
+
+        let fileName = relativeFilePathForDocument(document);
         Singleton.getTags()
         .filter(tag => tag.file === fileName)
         .forEach(tag => {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(tagMenu.hightlightedTagInfo));
-            editor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
+            textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
             activeDecorations.push(co);
         });
     }
@@ -84,6 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "codetagging" is now active!');
+    codeChangeListener = new CodeChangeListener(context, redraw);
+    textDocumentChanged = new TextDocumentChanged(context, redraw);
+    tagMenu = new TagMenu(redraw, tagSelection);
 
     //section for setting up the html preview
     //this is the uri for our visualization that will be generated (its a virtual document no actual html file will exist)
@@ -113,7 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
         //get workspace url
         let  workspacePath = vscode.workspace.rootPath;
         //create uri object for a local file
-        let path = vscode.Uri.file(workspacePath +fileName);
+        let path = vscode.Uri.file(workspacePath + fileName);
   
         vscode.workspace.openTextDocument(path).then(document => {
             return vscode.window.showTextDocument(document);
@@ -123,17 +127,12 @@ export function activate(context: vscode.ExtensionContext) {
     //when a user clicks a tag type link in the html preview have it filter the ui 
     vscode.commands.registerCommand('extension.modifyUiForTag', (tagInfoName: string) => {
         console.log("run given command for: " + tagInfoName);
-        tagMenu.isolateTagInfoName(tagInfoName);
-        
+        tagMenu.isolateTagInfoName(tagInfoName, true);
     });
 
     //end section
 
     createTagMenu(context);
-
-    codeChangeListener = new CodeChangeListener(context, redraw);
-    textDocumentChanged = new TextDocumentChanged(context, redraw);
-    tagMenu = new TagMenu(redraw, tagSelection);
 
     // for (let i = 1; i <= 2; i += 3) {
     //     let ti = Singleton.createNewTagInfo("" + i);
@@ -147,6 +146,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.tagIsolate', () => tagMenu.showIsolateMenu()));
 
     Singleton.load();
+    redraw();
 }
 
 // The command has been defined in the package.json file

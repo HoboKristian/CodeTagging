@@ -61,10 +61,10 @@ export class LoadSerialization{
         //console.log('loop through tag object array');
         this.tags.forEach( (element) => {
             //console.log(element.tagInfo.name);
-            for(let i=0; i<this.tagInfos.length; i++) {
+            for(let tagInfo of Singleton.getTagInfos()) {
                 //console.log(this.tagInfos[i]);
-                if(element.tagInfo.name === this.tagInfos[i].name){
-                    element.tagInfo = this.tagInfos[i];
+                if(element.tagInfo.name === tagInfo.name) {
+                    element.tagInfo = tagInfo;
                 }
             }
 

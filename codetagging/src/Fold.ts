@@ -9,6 +9,7 @@ let foldedMethods:string[] = [];
 namespace Fold {
     async function getMethodsInCurrentFiles() {
         let textEditor = vscode.window.activeTextEditor;
+        console.log("rip: " + textEditor);
         if (textEditor) {
             let symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeDocumentSymbolProvider', textEditor.document.uri);
             if (symbols) {
@@ -23,7 +24,7 @@ namespace Fold {
             let methodStart = method.location.range.start.line;
             let methodEnd = method.location.range.end.line;
             return (line >= methodStart && line <= methodEnd);
-        }
+        };
         
         return highlightedTags.some(tag => (lineInMethod(tag.start, method) || lineInMethod(tag.end, method)));
     }
@@ -37,7 +38,7 @@ namespace Fold {
                 .filter(si => (si.kind === vscode.SymbolKind.Method || si.kind === vscode.SymbolKind.Function))
                 .filter(si => (foldedMethods.includes(si.name)))
                 .map(si => si.location.range.start.line);
-                vscode.commands.executeCommand('editor.unfold', {levels: 1, direction: 'up', selectionLines: lineNumbers});
+                vscode.commands.executeCommand('editor.unfoldAll');//, {levels: 1, direction: 'up', selectionLines: lineNumbers});
                 foldedMethods = [];
             }
         }
@@ -45,13 +46,14 @@ namespace Fold {
     export async function highlightTag(highlightedTagInfo:TagInfo) {
         let linesToCollapse: number[] = [];
         let highlightedTags = Singleton.getTags().filter(e => e.tagInfo === highlightedTagInfo);
-        (await getMethodsInCurrentFiles())
-        .filter(method => !methodContainsHighlightedTags(method, highlightedTags))
-        .forEach(method => {
+        let methods = (await getMethodsInCurrentFiles());
+        let foldThis = methods.filter(method => !methodContainsHighlightedTags(method, highlightedTags));
+        console.log(methods, foldThis, highlightedTagInfo, highlightedTags);
+
+        foldThis.forEach(method => {
             foldedMethods.push(method.name);
             linesToCollapse.push(method.location.range.start.line);
         });
-        console.log(foldedMethods, linesToCollapse);
         vscode.commands.executeCommand('editor.fold', {levels: 1, direction: 'up', selectionLines: linesToCollapse});
     }
 }

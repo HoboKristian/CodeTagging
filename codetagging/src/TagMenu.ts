@@ -3,10 +3,10 @@ import Singleton from './Singleton';
 import TagInfo from './TagInfo';
 import Fold from './Fold';
 import FileUtility from './FileUtility';
-import * as Hiding from './Hiding';
+import Hiding from './Hiding';
 
 export default class TagMenu {
-    private tagIsolated:boolean = false;
+    private tagIsolated:boolean;
     private createNewTagString:string = 'Create New Tag';
     private highlightCurrentString:string = "Highlight Current Tag: ";
 
@@ -16,6 +16,7 @@ export default class TagMenu {
     constructor(redraw:Function, tagSelection:Function) {
         this.redrawCallBack = redraw;
         this.tagSelectionCallBack = tagSelection;
+        this.tagIsolated = false;
     }
 
     async showTagMenu() {
@@ -66,7 +67,7 @@ export default class TagMenu {
         let existingTagsWithCurrentLine = existingTags.slice(0, existingTags.length);
         let textEditor = vscode.window.activeTextEditor;
         if (textEditor) {
-            let currentLine = textEditor.selection.start.line;
+            let currentLine = textEditor.selection.start.line + 1;
             let currentTag = Singleton.getTags()
             .find(tag => tag.start <= currentLine && tag.end >= currentLine);
             if (currentTag) {
@@ -75,8 +76,7 @@ export default class TagMenu {
         }
         if (this.tagIsolated) {
             this.tagIsolated = !this.tagIsolated;
-            this.removeCurrentIsolation();
-            //vscode.window.showInformationMessage('Isolation deactivated');
+            this.removeCurrentIsolation(true);
         } else {
             // open Quick Pick input box, displays suggestions based on typed text from the existingTags array
             let input = await vscode.window.showQuickPick(existingTagsWithCurrentLine);
@@ -90,36 +90,43 @@ export default class TagMenu {
             if (input.startsWith(this.highlightCurrentString)) {
                 input = input.replace(this.highlightCurrentString, "");
             }
-            this.isolateTagInfoName(input);
-            vscode.window.showInformationMessage('\"' + input + '\" tag is isolated');
+            this.isolateTagInfoName(input, true);
         }
     }
 
-    private removeCurrentIsolation(){
+    private removeCurrentIsolation(output:boolean){
         this.hightlightedTagInfo = undefined;
         Hiding.unhideFiles();
         Fold.unfoldFoldedMethods();
         this.redrawCallBack();
-    }
-
-    isolateTagInfoName(tagInfoName:string) {
-        if (this.tagIsolated) {
-            this.removeCurrentIsolation();
+        if (output) {
+            //vscode.window.showInformationMessage('Isolation deactivated');
         }
-        this.tagIsolated = !this.tagIsolated;
-        this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === tagInfoName);
-        this.highlightTagInfo(this.hightlightedTagInfo);
-        this.redrawCallBack();
     }
 
-    private highlightTagInfo(highlightedTagInfo:TagInfo|undefined) {
-        if (highlightedTagInfo) {
-            let allFiles = FileUtility.filesThatDoNotContainTagInfo(highlightedTagInfo);
+    async isolateTagInfoName(tagInfoName:string, output:boolean) {
+        if (this.tagIsolated) {
+            this.removeCurrentIsolation(false);
+        }
+        this.hightlightedTagInfo = Singleton.getTagInfos().find(tagInfo => tagInfo.name === tagInfoName);
+
+        if (this.hightlightedTagInfo) {
+            let allFiles = FileUtility.filesThatDoNotContainTagInfo(this.hightlightedTagInfo);
             if (allFiles) {
                 Hiding.hideFiles(allFiles);
             }
-            Fold.highlightTag(highlightedTagInfo);
+            for (let textEditor of vscode.window.visibleTextEditors) {
+                let document = await vscode.workspace.openTextDocument(textEditor.document.uri);
+                await vscode.window.showTextDocument(document);
+    
+                Fold.highlightTag(this.hightlightedTagInfo);                
+            }
+            if (output) {
+                //vscode.window.showInformationMessage('\"' + tagInfoName + '\" tag is isolated');
+            }
+            this.tagIsolated = true;
         }
+        this.redrawCallBack();
     }
 
     private createNewTagSelected(value:string) {
