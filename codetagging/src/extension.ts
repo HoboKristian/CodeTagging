@@ -65,14 +65,12 @@ async function redraw() {
     activeDecorations = [];
 
     for (let textEditor of vscode.window.visibleTextEditors) {
-        let document = await vscode.workspace.openTextDocument(textEditor.document.uri);
-        await vscode.window.showTextDocument(document);
-
-        let fileName = relativeFilePathForDocument(document);
-        Singleton.getTags()
-        .filter(tag => tag.file === fileName)
-        .forEach(tag => {
+        let fileName = relativeFilePathForDocument(textEditor.document);
+        let tags = Singleton.getTags()
+        .filter(tag => tag.file === fileName);
+        tags.forEach(tag => {
             let co = vscode.window.createTextEditorDecorationType(tag.tagInfo.getDecorationConfig(tagMenu.hightlightedTagInfo));
+            //console.log(tag.tagInfo.getDecorationConfig(tagMenu.hightlightedTagInfo));
             textEditor.setDecorations(co, [new vscode.Range(new vscode.Position(tag.start - 1, 0), new vscode.Position(tag.end - 1, 0))]);
             activeDecorations.push(co);
         });
