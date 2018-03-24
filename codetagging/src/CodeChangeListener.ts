@@ -97,7 +97,7 @@ export default class CodeChangeListener {
                 console.log("del within");
             } else if (changeStart <= tagStart && changeEnd >= tagEnd) { // around
                 // TODO: Delete the tag
-                Singleton.removeTag(tag);
+                //Singleton.removeTag(tag);
                 console.log("del around");
             } else if (changeStart <= tagStart && changeEnd >= tagStart && changeEnd < tagEnd) { // around start
                 tagStart = changeEnd;
