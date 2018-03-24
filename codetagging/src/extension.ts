@@ -134,11 +134,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     createTagMenu(context);
 
-    // for (let i = 1; i <= 2; i += 3) {
-    //     let ti = Singleton.createNewTagInfo("" + i);
-    //     tagLines(ti, i, i+2);
-    // }
-
     // for html preview
     context.subscriptions.push(htmlPreviewDisposable, registration);
 

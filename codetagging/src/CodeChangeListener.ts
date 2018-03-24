@@ -20,6 +20,7 @@ export default class CodeChangeListener {
         }
     }
     _onEvent(e: vscode.TextDocumentChangeEvent) {
+        return;
         let msg = e.contentChanges[0];
 
         let result = this.getChangeType(msg);
