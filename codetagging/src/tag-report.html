@@ -94,11 +94,13 @@ table.blueTable tfoot .links a{
             tempArr.push(obj.tagInfo.name);
             //also add the taginfo.name to our taginfoSet so we have a unique list of taginfos which we'll use 
             //to build our accordion element
-                taginfoSet.add(obj.tagInfo.name)
+            taginfoSet.add(obj.tagInfo.name)
             tempArr.push(obj.file);
             tempArr.push(obj.author);
             var date = new Date(obj.timestamp);//convert the date from unix milliseconds
             tempArr.push(date);
+            tempArr.push(obj.start);
+            tempArr.push(obj.end);
             //add our sub array to our master data array
             dataArrary.push(tempArr);
             
@@ -213,7 +215,12 @@ table.blueTable tfoot .links a{
                     //get and each tag path
                     var td = document.createElement("td");
                     var a = document.createElement('a');
-                    a.setAttribute('href','command:extension.revealTaggedFile?'+ encodeURIComponent(JSON.stringify(obj[1])));
+                    var passedElement = {
+                        "fileName": obj[1],
+                        "tagStart": obj[4],
+                        "tagEnd": obj[5]
+                    };
+                    a.setAttribute('href','command:extension.revealTaggedFile?'+ encodeURIComponent(JSON.stringify(passedElement)));
                     a.innerHTML = obj[1];
                     td.appendChild(a);
                     tr.appendChild(td);

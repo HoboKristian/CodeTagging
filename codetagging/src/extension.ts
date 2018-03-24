@@ -111,15 +111,8 @@ export function activate(context: vscode.ExtensionContext) {
     });
     
     //when a user clicks a file link in the visulizatoin open the file in a new tab in the editor
-    vscode.commands.registerCommand('extension.revealTaggedFile', (fileName: string) => {
-        //get workspace url
-        let  workspacePath = vscode.workspace.rootPath;
-        //create uri object for a local file
-        let path = vscode.Uri.file(workspacePath + fileName);
-  
-        vscode.workspace.openTextDocument(path).then(document => {
-            return vscode.window.showTextDocument(document);
-        });
+    vscode.commands.registerCommand('extension.revealTaggedFile', (passedTag) => {
+        revealTag(passedTag);
     });
     
     //when a user clicks a tag type link in the html preview have it filter the ui 
@@ -138,6 +131,24 @@ export function activate(context: vscode.ExtensionContext) {
 
     Singleton.load();
     redraw();
+}
+
+async function revealTag(passedTag:any) {
+    let fileName:string = passedTag.fileName;
+    let tagStart:number = passedTag.tagStart;
+    let tagEnd:number = passedTag.tagEnd;
+    //get workspace url
+    let  workspacePath = vscode.workspace.rootPath;
+    //create uri object for a local file
+    let path = vscode.Uri.file(workspacePath + fileName);
+
+    let document = await vscode.workspace.openTextDocument(path);
+    let textEditor = await vscode.window.showTextDocument(document);
+
+    if (textEditor) {
+        textEditor.revealRange(new vscode.Range(tagStart, 0, tagEnd, 0), vscode.TextEditorRevealType.InCenter);
+    }
+    return;
 }
 
 // this method is called when your extension is deactivated
