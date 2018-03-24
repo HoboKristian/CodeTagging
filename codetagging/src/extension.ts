@@ -132,8 +132,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     //end section
 
-    createTagMenu(context);
-
     // for html preview
     context.subscriptions.push(htmlPreviewDisposable, registration);
 
@@ -142,13 +140,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     Singleton.load();
     redraw();
-}
-
-// The command has been defined in the package.json file
-// Now provide the implementation of the command with  registerCommand
-// The commandId parameter must match the command field in package.json
-function createTagMenu(context:vscode.ExtensionContext) {
-    
 }
 
 // this method is called when your extension is deactivated
