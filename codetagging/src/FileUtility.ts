@@ -9,6 +9,9 @@ const path = require('path');
 namespace FileUtility {
     function walkSync(dir:string):string[] {
         if (!fs.lstatSync(dir).isDirectory()) {
+            if (dir.includes("node_modules")) {
+                return [];
+            }
             return [dir];
         }
         
